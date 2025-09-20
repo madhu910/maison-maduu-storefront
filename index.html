@@ -3,202 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maison Maduu & Co. – Premium Collections</title>
-    <meta name="description" content="Explore premium, curated collections of apparel and accessories at Maison Maduu & Co. Designed for the modern individual.">
+    <title>Maison Maduu & Co. // A.D. 3000</title>
+    <meta name="description" content="Acquire limited-run physical artifacts. Minted on demand and dispatched to your designated coordinates via the Chronos network.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace+SC&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #F5F5F4;
-            --card-bg: #FFFFFF;
-            --footer-bg: #FFFFFF;
-            --text-primary: #1C1C1E;
-            --text-secondary: #8A8A8E;
-            --accent-color: #B2844E;
-            --accent-dark: #A17643;
-            --border-color: #EAEAEA;
-            --star-color: #FBBF24;
-            --font-body: 'Inter', sans-serif;
-            --font-heading: 'Poppins', sans-serif;
+            --bg-color: #000000; --text-primary: #EDEDFF; --text-secondary: #8886A4;
+            --accent-color: #00F5D4; --font-body: 'Space Mono', monospace;
+            --font-heading: 'Bruno Ace SC', cursive;
         }
-        /* All CSS is the same as the previous luxury version */
         *, *::before, *::after { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { font-family: var(--font-body); background-color: var(--bg-color); color: var(--text-primary); margin: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-        .container { max-width: 1280px; margin: 0 auto; padding: 0 clamp(1rem, 5vw, 2rem); }
-        .main-header { background-color: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 1rem clamp(1rem, 5vw, 2rem); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-        .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 1280px; margin: 0 auto; }
-        .nav-brand { font-family: var(--font-heading); font-weight: 600; font-size: 1.5rem; text-decoration: none; color: var(--text-primary); }
-        .nav-links a { margin-left: 2rem; text-decoration: none; color: var(--text-secondary); font-weight: 500; transition: color 0.2s ease; }
-        .nav-links a:hover { color: var(--accent-color); }
-        .hero-carousel { position: relative; width: 100%; height: 60vh; max-height: 550px; border-radius: 16px; overflow: hidden; margin-top: clamp(2rem, 5vw, 3rem); margin-bottom: clamp(3rem, 10vw, 6rem); background-color: var(--border-color); }
-        .carousel-track { display: flex; height: 100%; transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1); }
-        .carousel-slide { flex: 0 0 100%; width: 100%; height: 100%; }
-        .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
-        .section-title { text-align: center; font-size: clamp(1.8rem, 5vw, 2.5rem); font-family: var(--font-heading); font-weight: 600; letter-spacing: 1px; margin-bottom: 1rem; color: var(--text-primary); }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; padding-bottom: 4rem; }
-        @keyframes fadeInStagger { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .card { background: var(--card-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.03); text-decoration: none; color: var(--text-primary); display: flex; flex-direction: column; position: relative; transition: transform 0.3s ease, box-shadow 0.3s ease; opacity: 0; animation: fadeInStagger 0.5s ease-out forwards; }
-        .card:hover { transform: translateY(-8px); box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 3px 6px rgba(0,0,0,0.05); }
-        .card .image-wrapper { width: 100%; aspect-ratio: 1/1; overflow: hidden; position: relative; }
-        .card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-        .card:hover img { transform: scale(1.05); }
-        .product-badge { position: absolute; top: 1rem; left: 1rem; background-color: var(--accent-color); color: white; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 700; border-radius: 50px; text-transform: uppercase; }
-        .card-content { padding: 1rem 1.25rem; display: flex; flex-direction: column; flex-grow: 1; }
-        .card h3 { font-family: var(--font-heading); font-size: 1.2rem; font-weight: 500; margin: 0; line-height: 1.4; }
-        .rating-price-row { display: flex; justify-content: space-between; align-items: center; margin: 0.75rem 0; }
-        .star-rating { display: flex; gap: 2px; } .star-rating svg { width: 16px; height: 16px; }
-        .product-price { font-size: 1.4rem; font-weight: 700; color: var(--text-primary); }
-        .buy-now { margin-top: auto; display: block; width: 100%; text-align: center; background: var(--accent-color); color: white; border: none; padding: 0.85rem 1.8rem; border-radius: 8px; font-weight: 500; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 1px; cursor: pointer; transition: background-color 0.2s ease; }
-        .buy-now:hover { background-color: var(--accent-dark); }
-        footer { background-color: var(--footer-bg); border-top: 1px solid var(--border-color); padding: 3rem clamp(1rem, 5vw, 2rem); margin-top: 2rem; }
-        .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.7); border: none; border-radius: 50%; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s ease, background-color 0.2s ease; }
-        .carousel-btn:hover { transform: translateY(-50%) scale(1.1); background: white; } .carousel-btn.prev { left: 1.5rem; } .carousel-btn.next { right: 1.5rem; } .carousel-dots { position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; } .carousel-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); border: none; cursor: pointer; transition: transform 0.2s ease, background-color 0.3s ease; } .carousel-dot.active { background: white; transform: scale(1.2); } .controls-container { display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin-bottom: clamp(2rem, 8vw, 4rem); flex-wrap: wrap; } .control-group label { font-weight: 500; color: var(--text-secondary); margin-right: 0.5rem; } .control-group select { padding: 0.75rem 1.5rem; font-size: 1rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--card-bg); cursor: pointer; -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; } .footer-grid { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; } .footer-column h4 { font-family: var(--font-heading); font-size: 1.1rem; margin-bottom: 1rem; text-transform: uppercase; } .footer-column ul { list-style: none; padding: 0; margin: 0; } .footer-column ul li a { display: block; padding: 0.5rem 0; text-decoration: none; color: var(--text-secondary); transition: color 0.2s ease; } .footer-column ul li a:hover { color: var(--accent-color); } .footer-bottom { max-width: 1280px; margin: 3rem auto 0 auto; text-align: center; padding-top: 2rem; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.875rem; }
+        body { font-family: var(--font-body); background-color: var(--bg-color); color: var(--text-primary); margin: 0; overflow: hidden; }
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .hero-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; padding: 1rem; }
+        .hero-content h1 { font-family: var(--font-heading); font-size: clamp(3rem, 10vw, 7rem); line-height: 1; margin: 0 0 1.5rem 0; text-shadow: 0 0 15px var(--accent-color); animation: fadeIn 2s ease-out; }
+        .hero-content p { font-size: clamp(1rem, 2.5vw, 1.25rem); color: var(--text-secondary); max-width: 600px; margin: 0 auto 2.5rem auto; line-height: 1.7; animation: fadeIn 2s 0.5s ease-out backwards; }
+        .cta-button { font-family: var(--font-heading); font-size: 1.2rem; color: var(--bg-color); background: var(--accent-color); padding: 1rem 3rem; border-radius: 5px; text-decoration: none; transition: transform 0.3s ease, box-shadow 0.3s ease; box-shadow: 0 0 25px var(--accent-color); animation: fadeIn 2s 1s ease-out backwards; }
+        .cta-button:hover { transform: scale(1.05); box-shadow: 0 0 40px var(--accent-color); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <header class="main-header">
-        <nav class="nav-container">
-            <a href="#" class="nav-brand">Maison Maduu & Co.</a>
-            <div class="nav-links">
-                <a href="#">Shop</a>
-                <a href="#">New Arrivals</a>
-                <a href="#">Collections</a>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main>
-            <section class="hero-carousel" id="hero-carousel" aria-label="Featured Collections">
-                <div class="carousel-track">
-                    <div class="carousel-slide"><img src="https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Stylish Woman in a Graphic Tee"></div>
-                    <div class="carousel-slide"><img src="https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Male Model in a Stylish Pose with a Graphic Tee"></div>
-                    <div class="carousel-slide"><img src="https://images.pexels.com/photos/7693574/pexels-photo-7693574.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Energetic Group of Friends in Streetwear"></div>
-                    <div class="carousel-slide"><img src="https://images.pexels.com/photos/322207/pexels-photo-322207.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Stylish Couple in Modern Apparel"></div>
-                </div>
-                <button class="carousel-btn prev" aria-label="Previous Slide"><svg xmlns="http://www.w.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
-                <button class="carousel-btn next" aria-label="Next Slide"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-                <div class="carousel-dots"></div>
-            </section>
-            <section>
-                <h2 class="section-title">Explore The Collections</h2>
-                <div class="controls-container">
-                    <div class="control-group">
-                        <label for="category-select">Filter by:</label>
-                        <select id="category-select" disabled><option value="all">All Categories</option></select>
-                    </div>
-                    <div class="control-group">
-                        <label for="sort-select">Sort by:</label>
-                        <select id="sort-select" disabled><option value="featured">Featured</option></select>
-                    </div>
-                </div>
-                <div class="product-grid" id="product-grid"></div>
-            </section>
-        </main>
+    <canvas id="particle-canvas"></canvas>
+    <div class="hero-content">
+        <h1>STYLE SYNTHESIS</h1>
+        <p>Physical artifacts minted on demand. Your aesthetic, algorithmically evolved.</p>
+        <a href="shop.html" class="cta-button">Enter The Nexus</a>
     </div>
-    <footer>
-       <div class="footer-grid">
-            <div class="footer-column"><h4>Shop</h4><ul><li><a href="#">New Arrivals</a></li><li><a href="#">T-Shirts</a></li><li><a href="#">Accessories</a></li><li><a href="#">All Products</a></li></ul></div>
-            <div class="footer-column"><h4>Our Company</h4><ul><li><a href="#">About Us</a></li><li><a href="#">Our Promise</a></li><li><a href="#">Contact</a></li></ul></div>
-            <div class="footer-column"><h4>Customer Service</h4><ul><li><a href="#">Shipping</a></li><li><a href="#">Returns</a></li><li><a href="#">FAQ</a></li></ul></div>
-            <div class="footer-column"><h4>Follow Us</h4><ul><li><a href="#">Instagram</a></li><li><a href="#">Facebook</a></li><li><a href="#">Twitter</a></li></ul></div>
-        </div>
-        <div class="footer-bottom">&copy; 2025 Maison Maduu & Co. All Rights Reserved.</div>
-    </footer>
-
     <script>
-        // --- START OF UPDATED JAVASCRIPT ---
-        const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
-
-        function generateStarRating(rating = 4.5) {
-            // This helper function remains the same
-            let starsHTML = ''; const fullStars = Math.floor(rating); const halfStar = rating % 1 !== 0; const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
-            for (let i = 0; i < fullStars; i++) { starsHTML += `<svg fill="${'var(--star-color)'}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>`; }
-            if (halfStar) { starsHTML += `<svg fill="${'var(--star-color)'}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545L10 15zM10 12.42V0l-2.22 4.5L2 5.2l3.43 3.35L4.65 15 10 12.42z"/></svg>`; }
-            for (let i = 0; i < emptyStars; i++) { starsHTML += `<svg fill="${'var(--border-color)'}" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>`; }
-            return `<div class="star-rating">${starsHTML}</div>`;
-        }
-
-        async function fetchAndRenderProducts() {
-            const productGrid = document.getElementById("product-grid");
-            productGrid.innerHTML = `<p class="message">Loading collections from Printify...</p>`;
-            try {
-                // NEW: Calling the /api/products endpoint on our backend
-                const response = await fetch(`${API_BASE_URL}/api/products`);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Network response was not ok');
+        document.addEventListener("DOMContentLoaded", () => {
+            const canvas = document.getElementById('particle-canvas'); if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let particles = [];
+            const mouse = { x: null, y: null, radius: 150 };
+            window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+            window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initParticles(); });
+            class Particle {
+                constructor(x, y, dirX, dirY, size, color) { this.x=x; this.y=y; this.dirX=dirX; this.dirY=dirY; this.size=size; this.color=color; }
+                draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fillStyle = this.color; ctx.fill(); }
+                update() {
+                    if (this.x > canvas.width || this.x < 0) this.dirX = -this.dirX;
+                    if (this.y > canvas.height || this.y < 0) this.dirY = -this.dirY;
+                    let dx = mouse.x - this.x, dy = mouse.y - this.y;
+                    if (mouse.x && Math.sqrt(dx*dx + dy*dy) < mouse.radius) { this.x -= dx / 15; this.y -= dy / 15; }
+                    this.x += this.dirX; this.y += this.dirY;
+                    this.draw();
                 }
-                
-                const productsData = await response.json();
-                productGrid.innerHTML = ""; 
-
-                if (!productsData || productsData.length === 0) {
-                    productGrid.innerHTML = `<p class="message">No products found in your Printify store.</p>`;
-                    return;
-                }
-
-                productsData.forEach((product, index) => {
-                    const cardDiv = document.createElement("div"); // Changed from <a> to <div>
-                    cardDiv.className = "card";
-                    cardDiv.style.animationDelay = `${index * 90}ms`;
-                    
-                    // --- Parsing Printify Data ---
-                    const title = product.title;
-                    const imageUrl = product.images.length > 0 ? product.images[0].src : 'https://via.placeholder.com/300';
-                    // Printify price is in cents, so we divide by 100
-                    const price = product.variants.length > 0 ? `$${(product.variants[0].price / 100).toFixed(2)}` : '$0.00';
-                    const ratingHTML = generateStarRating(); // Printify doesn't have ratings, so we use a default
-                    const badge = product.tags.length > 0 ? product.tags[0] : null; // Use the first tag as a badge
-
-                    cardDiv.innerHTML = `
-                        <div class="image-wrapper">
-                            ${badge ? `<div class="product-badge">${badge}</div>` : ''}
-                            <img src="${imageUrl}" alt="${title}">
-                        </div>
-                        <div class="card-content">
-                            <h3>${title}</h3>
-                            <div class="rating-price-row">
-                                ${ratingHTML}
-                                <span class="product-price">${price}</span>
-                            </div>
-                            <button class="buy-now" onclick="window.open('${product.external.url}', '_blank')">View on Printify</button>
-                        </div>
-                    `;
-                    productGrid.appendChild(cardDiv);
-                });
-            } catch (error) {
-                console.error('There was a problem fetching the products:', error);
-                productGrid.innerHTML = `<p class="message">Failed to load products. Please check the backend server logs.</p>`;
             }
-        }
-        
-        // Carousel and other initializations remain the same
-        function initializeCarousel() { /* ... unchanged carousel logic ... */ }
-        async function initializeShop() {
-            initializeCarousel();
-            // We no longer need to populate categories this way
-            await fetchAndRenderProducts();
-        }
-
-        document.addEventListener("DOMContentLoaded", initializeShop);
-
-        // --- FULL CAROUSEL LOGIC ---
-        function initializeCarousel() {
-            const carousel = document.getElementById('hero-carousel'); if (!carousel) return;
-            const track = carousel.querySelector('.carousel-track'); const slides = Array.from(track.children); const nextButton = carousel.querySelector('.next'); const prevButton = carousel.querySelector('.prev'); const dotsNav = carousel.querySelector('.carousel-dots'); if (slides.length === 0) return;
-            let slideWidth = slides[0].getBoundingClientRect().width;
-            slides.forEach((_, i) => { const dot = document.createElement('button'); dot.classList.add('carousel-dot'); if (i === 0) dot.classList.add('active'); dotsNav.appendChild(dot); dot.addEventListener('click', () => moveToSlide(i)); });
-            const dots = Array.from(dotsNav.children); let currentSlide = 0;
-            const moveToSlide = (targetIndex) => { track.style.transform = `translateX(-${slideWidth * targetIndex}px)`; dots[currentSlide].classList.remove('active'); dots[targetIndex].classList.add('active'); currentSlide = targetIndex; };
-            const updateSlideWidth = () => { slideWidth = slides[0].getBoundingClientRect().width; track.style.transition = 'none'; moveToSlide(currentSlide); track.offsetHeight; track.style.transition = ''; };
-            nextButton.addEventListener('click', () => { const nextIndex = (currentSlide + 1) % slides.length; moveToSlide(nextIndex); });
-            prevButton.addEventListener('click', () => { const prevIndex = (currentSlide - 1 + slides.length) % slides.length; moveToSlide(prevIndex); });
-            let autoPlayInterval = setInterval(() => nextButton.click(), 5000);
-            carousel.addEventListener('mouseenter', () => clearInterval(autoPlayInterval)); carousel.addEventListener('mouseleave', () => autoPlayInterval = setInterval(() => nextButton.click(), 5000));
-            window.addEventListener('resize', updateSlideWidth);
-        }
+            function initParticles() {
+                particles = [];
+                let count = (canvas.width * canvas.height) / 9000;
+                for (let i = 0; i < count; i++) {
+                    particles.push(new Particle( Math.random() * canvas.width, Math.random() * canvas.height, (Math.random() * 0.4) - 0.2, (Math.random() * 0.4) - 0.2, Math.random() * 2 + 1, 'rgba(0, 245, 212, 0.5)' ));
+                }
+            }
+            function animateParticles() { requestAnimationFrame(animateParticles); ctx.clearRect(0, 0, canvas.width, canvas.height); for (let p of particles) { p.update(); } }
+            initParticles();
+            animateParticles();
+        });
     </script>
 </body>
 </html>
