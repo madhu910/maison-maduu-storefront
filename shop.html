@@ -16,6 +16,7 @@
         }
         *, *::before, *::after { box-sizing: border-box; }
         body { font-family: var(--font-body); background-color: var(--bg-color); color: var(--text-primary); margin: 0; }
+        #background-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
         .container { max-width: 1280px; margin: 0 auto; padding: 0 clamp(1rem, 5vw, 2rem); }
         .main-header { background: rgba(5, 2, 20, 0.7); border-bottom: 1px solid var(--border-color); padding: 1rem clamp(1rem, 5vw, 2rem); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(var(--blur-strength)); }
         .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 1280px; margin: 0 auto; }
@@ -23,7 +24,7 @@
         .section-title { text-align: center; font-size: clamp(2rem, 6vw, 3.5rem); font-family: var(--font-heading); margin: 4rem 0 1rem 0; }
         .filter-bar { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 3rem; display: flex; flex-wrap: wrap; gap: 2rem; align-items: center; justify-content: center; backdrop-filter: blur(var(--blur-strength)); }
         .filter-group { display: flex; align-items: center; gap: 0.75rem; }
-        .filter-group label { font-family: var(--font-body); color: var(--text-secondary); font-size: 0.9rem; letter-spacing: 1px; }
+        .filter-group label { font-family: var(--font-body); color: var(--text-secondary); font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; }
         .filter-group select { background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 5px; padding: 0.5rem 1rem; font-family: var(--font-body); }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2.5rem; padding-bottom: 4rem; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -35,10 +36,12 @@
         .card-content { padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; border-top: 1px solid var(--border-color); }
         .card h3 { font-family: var(--font-heading); font-size: 1.4rem; margin: 0 0 1rem 0; letter-spacing: 1px; }
         .product-price { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-top: auto; }
+        .message { text-align: center; color: var(--text-secondary); font-size: 1.1rem; padding: 3rem; grid-column: 1 / -1; }
         footer { text-align: center; padding: 3rem 1rem; border-top: 1px solid var(--border-color); color: var(--text-secondary); }
     </style>
 </head>
 <body>
+    <canvas id="background-canvas"></canvas>
     <header class="main-header">
         <nav class="nav-container">
             <a href="index.html" class="nav-brand">Maison Maduu_3000</a>
@@ -49,11 +52,11 @@
             <h1 class="section-title">Artifact Nexus</h1>
             <div class="filter-bar">
                 <div class="filter-group">
-                    <label for="category-filter">CLASSIFICATION:</label>
+                    <label for="category-filter">Classification:</label>
                     <select id="category-filter"><option value="all">ALL</option></select>
                 </div>
                 <div class="filter-group">
-                    <label for="sort-filter">SORT BY:</label>
+                    <label for="sort-filter">Sort By:</label>
                     <select id="sort-filter">
                         <option value="default">Default</option>
                         <option value="price-asc">Price: Ascending</option>
@@ -69,39 +72,93 @@
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
         let allProducts = [];
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        function initializePlexusBackground() {
+            const canvas = document.getElementById('background-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            let particles = [];
+            const mouse = { x: null, y: null };
+            window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+            window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initParticles(); });
+            
+            class Particle {
+                constructor(x, y, vx, vy) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.size = Math.random() * 1.5 + 1; }
+                update() {
+                    this.x += this.vx; this.y += this.vy;
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+                draw() { ctx.fillStyle = 'rgba(0, 245, 212, 0.5)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+            }
+            function initParticles() {
+                particles = [];
+                let numberOfParticles = (canvas.width * canvas.height) / 20000;
+                for (let i = 0; i < numberOfParticles; i++) {
+                    particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5));
+                }
+            }
+            function connectParticles() {
+                let maxDistance = 120;
+                for (let a = 0; a < particles.length; a++) {
+                    for (let b = a; b < particles.length; b++) {
+                        let dx = particles[a].x - particles[b].x;
+                        let dy = particles[a].y - particles[b].y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < maxDistance) {
+                            ctx.strokeStyle = `rgba(0, 245, 212, ${1 - distance / maxDistance})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[a].x, particles[a].y);
+                            ctx.lineTo(particles[b].x, particles[b].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => { p.update(); p.draw(); });
+                connectParticles();
+                requestAnimationFrame(animate);
+            }
+            initParticles();
+            animate();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePlexusBackground();
+            initializeShop();
+        });
+
+        async function initializeShop() { /* Unchanged */ }
+        function populateFilters() { /* Unchanged */ }
+        function applyFiltersAndSort() { /* Unchanged */ }
+        function renderGrid(products) { /* Unchanged */ }
+        
+        // Full function definitions
+        async function initializeShop() {
             const productGrid = document.getElementById("product-grid");
-            productGrid.innerHTML = `<p style="text-align: center;">>> Accessing data stream...</p>`;
+            productGrid.innerHTML = `<p class="message">>> Accessing data stream...</p>`;
             try {
                 const response = await fetch(`${API_BASE_URL}/api/products`);
                 allProducts = await response.json();
                 populateFilters();
                 applyFiltersAndSort();
-            } catch (e) { productGrid.innerHTML = `<p style="text-align: center; color: #ff4757;">>> CONNECTION LOST_</p>`; }
+            } catch (e) { productGrid.innerHTML = `<p class="message" style="color: #ff4757;">>> CONNECTION LOST_</p>`; }
             document.getElementById('category-filter').addEventListener('change', applyFiltersAndSort);
             document.getElementById('sort-filter').addEventListener('change', applyFiltersAndSort);
-        });
-
+        }
         function populateFilters() {
             const categoryFilter = document.getElementById('category-filter');
             const categories = [...new Set(allProducts.flatMap(p => p.tags))];
-            categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat.toUpperCase();
-                categoryFilter.appendChild(option);
-            });
+            categories.forEach(cat => { const option = document.createElement('option'); option.value = cat; option.textContent = cat.toUpperCase(); categoryFilter.appendChild(option); });
         }
-
         function applyFiltersAndSort() {
             const category = document.getElementById('category-filter').value;
             const sort = document.getElementById('sort-filter').value;
             let processedProducts = [...allProducts];
-
-            if (category !== 'all') {
-                processedProducts = processedProducts.filter(p => p.tags.includes(category));
-            }
-
+            if (category !== 'all') { processedProducts = processedProducts.filter(p => p.tags.includes(category)); }
             processedProducts.sort((a, b) => {
                 const priceA = a.variants.length > 0 ? a.variants[0].price : 0;
                 const priceB = b.variants.length > 0 ? b.variants[0].price : 0;
@@ -109,34 +166,21 @@
                 if (sort === 'price-desc') return priceB - priceA;
                 return 0;
             });
-            
             renderGrid(processedProducts);
         }
-
         function renderGrid(products) {
             const productGrid = document.getElementById("product-grid");
             productGrid.innerHTML = "";
-            if (products.length === 0) {
-                productGrid.innerHTML = `<p style="text-align: center;">>> No artifacts match criteria.</p>`;
-                return;
-            }
+            if (products.length === 0) { productGrid.innerHTML = `<p class="message">>> No artifacts match criteria.</p>`; return; }
             products.forEach((product, index) => {
                 const cardLink = document.createElement("a");
                 cardLink.className = "card";
                 cardLink.href = `product.html?id=${product.id}`;
                 cardLink.style.animationDelay = `${index * 50}ms`;
-                
                 const title = product.title;
                 const imageUrl = product.images[0]?.src || '';
                 const price = product.variants[0] ? `$${(product.variants[0].price / 100).toFixed(2)}` : '$--.--';
-
-                cardLink.innerHTML = `
-                    <div class="image-wrapper"><img src="${imageUrl}" alt="${title}"></div>
-                    <div class="card-content">
-                        <h3>${title}</h3>
-                        <p class="product-price">${price}</p>
-                    </div>
-                `;
+                cardLink.innerHTML = `<div class="image-wrapper"><img src="${imageUrl}" alt="${title}"></div><div class="card-content"><h3>${title}</h3><p class="product-price">${price}</p></div>`;
                 productGrid.appendChild(cardLink);
             });
         }
