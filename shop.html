@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Nexus // Maison Maduu & Co.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace+SC&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #000000; --card-bg: rgba(10, 10, 25, 0.4); --text-primary: #EDEDFF;
+            --text-secondary: #8886A4; --accent-gradient: linear-gradient(90deg, #00F5D4 0%, #00B2FF 100%);
+            --glow-color: #00F5D4; --border-color: rgba(255, 255, 255, 0.15); --blur-strength: 15px;
+            --font-body: 'Space Mono', monospace; --font-heading: 'Bruno Ace SC', cursive;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: var(--font-body); background-color: var(--bg-color); color: var(--text-primary); margin: 0; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 clamp(1rem, 5vw, 2rem); }
+        .main-header { background: rgba(5, 2, 20, 0.7); border-bottom: 1px solid var(--border-color); padding: 1rem clamp(1rem, 5vw, 2rem); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(var(--blur-strength)); }
+        .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 1280px; margin: 0 auto; }
+        .nav-brand { font-family: var(--font-heading); font-weight: 700; font-size: 1.5rem; text-decoration: none; color: var(--text-primary); letter-spacing: 2px; text-shadow: 0 0 5px var(--glow-color); }
+        .section-title { text-align: center; font-size: clamp(2rem, 6vw, 3.5rem); font-family: var(--font-heading); margin: 4rem 0 1rem 0; }
+        .filter-bar { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 3rem; display: flex; flex-wrap: wrap; gap: 2rem; align-items: center; justify-content: center; backdrop-filter: blur(var(--blur-strength)); }
+        .filter-group { display: flex; align-items: center; gap: 0.75rem; }
+        .filter-group label { font-family: var(--font-body); color: var(--text-secondary); font-size: 0.9rem; letter-spacing: 1px; }
+        .filter-group select { background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 5px; padding: 0.5rem 1rem; font-family: var(--font-body); }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2.5rem; padding-bottom: 4rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); text-decoration: none; color: var(--text-primary); display: flex; flex-direction: column; position: relative; transition: transform 0.3s ease; opacity: 0; animation: fadeIn 0.5s ease-out forwards; backdrop-filter: blur(var(--blur-strength)); overflow: hidden; }
+        .card:hover { transform: translateY(-10px); }
+        .card .image-wrapper { width: 100%; aspect-ratio: 1/1; overflow: hidden; }
+        .card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .card:hover img { transform: scale(1.1); }
+        .card-content { padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; border-top: 1px solid var(--border-color); }
+        .card h3 { font-family: var(--font-heading); font-size: 1.4rem; margin: 0 0 1rem 0; letter-spacing: 1px; }
+        .product-price { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-top: auto; }
+        footer { text-align: center; padding: 3rem 1rem; border-top: 1px solid var(--border-color); color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <nav class="nav-container">
+            <a href="index.html" class="nav-brand">Maison Maduu_3000</a>
+        </nav>
+    </header>
+    <div class="container">
+        <main>
+            <h1 class="section-title">Artifact Nexus</h1>
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label for="category-filter">CLASSIFICATION:</label>
+                    <select id="category-filter"><option value="all">ALL</option></select>
+                </div>
+                <div class="filter-group">
+                    <label for="sort-filter">SORT BY:</label>
+                    <select id="sort-filter">
+                        <option value="default">Default</option>
+                        <option value="price-asc">Price: Ascending</option>
+                        <option value="price-desc">Price: Descending</option>
+                    </select>
+                </div>
+            </div>
+            <div class="product-grid" id="product-grid"></div>
+        </main>
+    </div>
+    <footer><p>&copy; 2025 Maison Maduu & Co. All Timelines Reserved.</p></footer>
+    <script>
+        const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
+        let allProducts = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const productGrid = document.getElementById("product-grid");
+            productGrid.innerHTML = `<p style="text-align: center;">>> Accessing data stream...</p>`;
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products`);
+                allProducts = await response.json();
+                populateFilters();
+                applyFiltersAndSort();
+            } catch (e) { productGrid.innerHTML = `<p style="text-align: center; color: #ff4757;">>> CONNECTION LOST_</p>`; }
+            document.getElementById('category-filter').addEventListener('change', applyFiltersAndSort);
+            document.getElementById('sort-filter').addEventListener('change', applyFiltersAndSort);
+        });
+
+        function populateFilters() {
+            const categoryFilter = document.getElementById('category-filter');
+            const categories = [...new Set(allProducts.flatMap(p => p.tags))];
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat.toUpperCase();
+                categoryFilter.appendChild(option);
+            });
+        }
+
+        function applyFiltersAndSort() {
+            const category = document.getElementById('category-filter').value;
+            const sort = document.getElementById('sort-filter').value;
+            let processedProducts = [...allProducts];
+
+            if (category !== 'all') {
+                processedProducts = processedProducts.filter(p => p.tags.includes(category));
+            }
+
+            processedProducts.sort((a, b) => {
+                const priceA = a.variants.length > 0 ? a.variants[0].price : 0;
+                const priceB = b.variants.length > 0 ? b.variants[0].price : 0;
+                if (sort === 'price-asc') return priceA - priceB;
+                if (sort === 'price-desc') return priceB - priceA;
+                return 0;
+            });
+            
+            renderGrid(processedProducts);
+        }
+
+        function renderGrid(products) {
+            const productGrid = document.getElementById("product-grid");
+            productGrid.innerHTML = "";
+            if (products.length === 0) {
+                productGrid.innerHTML = `<p style="text-align: center;">>> No artifacts match criteria.</p>`;
+                return;
+            }
+            products.forEach((product, index) => {
+                const cardLink = document.createElement("a");
+                cardLink.className = "card";
+                cardLink.href = `product.html?id=${product.id}`;
+                cardLink.style.animationDelay = `${index * 50}ms`;
+                
+                const title = product.title;
+                const imageUrl = product.images[0]?.src || '';
+                const price = product.variants[0] ? `$${(product.variants[0].price / 100).toFixed(2)}` : '$--.--';
+
+                cardLink.innerHTML = `
+                    <div class="image-wrapper"><img src="${imageUrl}" alt="${title}"></div>
+                    <div class="card-content">
+                        <h3>${title}</h3>
+                        <p class="product-price">${price}</p>
+                    </div>
+                `;
+                productGrid.appendChild(cardLink);
+            });
+        }
+    </script>
+</body>
+</html>
