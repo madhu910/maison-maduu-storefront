@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace+SC&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
     <style>
         :root {
             --bg-color: #000000; --card-bg: rgba(10, 10, 25, 0.4); --text-primary: #EDEDFF;
@@ -16,16 +17,14 @@
         }
         *, *::before, *::after { box-sizing: border-box; }
         body { font-family: var(--font-body); background-color: var(--bg-color); color: var(--text-primary); margin: 0; }
-        #background-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
         .container { max-width: 1280px; margin: 0 auto; padding: 0 clamp(1rem, 5vw, 2rem); }
         .main-header { background: rgba(5, 2, 20, 0.7); border-bottom: 1px solid var(--border-color); padding: 1rem clamp(1rem, 5vw, 2rem); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(var(--blur-strength)); }
         .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 1280px; margin: 0 auto; }
         .nav-brand { font-family: var(--font-heading); font-weight: 700; font-size: 1.5rem; text-decoration: none; color: var(--text-primary); letter-spacing: 2px; text-shadow: 0 0 5px var(--glow-color); }
         footer { text-align: center; padding: 3rem 1rem; border-top: 1px solid var(--border-color); color: var(--text-secondary); }
         .message { text-align: center; color: var(--text-secondary); font-size: 1.1rem; padding: 5rem 0; }
-        .product-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 3rem; margin: 4rem 0; align-items: start; opacity: 0; animation: fadeIn 1s 0.5s forwards; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .product-image-gallery .main-image img { width: 100%; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1rem; }
+        .product-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 3rem; margin: 4rem 0; align-items: start; }
+        .product-image-gallery .main-image img { width: 100%; border-radius: 8px; border: 1px solid var(--border-color); }
         .product-info h1 { font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 3rem); line-height: 1.2; margin: 0 0 1rem 0; }
         .product-info .price { font-size: 2.5rem; font-weight: 700; margin: 1.5rem 0; color: var(--glow-color); }
         .product-info .description { color: var(--text-secondary); line-height: 1.8; font-size: 1.1rem; border-left: 2px solid var(--glow-color); padding-left: 1.5rem; }
@@ -37,185 +36,188 @@
         .swatch.active { border-color: var(--glow-color); transform: scale(1.15); }
         .buy-now { width: 100%; margin-top: 2rem; font-family: var(--font-heading); font-weight: 700; text-align: center; background: var(--accent-gradient); color: #050214; border: none; padding: 1.25rem; border-radius: 8px; text-transform: uppercase; font-size: 1.2rem; letter-spacing: 1px; transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; }
         .buy-now:hover { transform: scale(1.03); box-shadow: 0 0 20px var(--glow-color); }
+        [v-cloak] { display: none; }
     </style>
 </head>
 <body>
-    <canvas id="background-canvas"></canvas>
     <header class="main-header">
         <nav class="nav-container">
             <a href="index.html" class="nav-brand">Maison Maduu_3000</a>
         </nav>
     </header>
-    <div class="container" id="product-detail-container">
-        <p class="message">>> Loading Artifact Data...</p>
+
+    <div id="app" class="container" v-cloak>
+        <div v-if="loading" class="message">>> Loading Artifact Data...</div>
+        <div v-if="error" class="message" style="color: #ff4757;">>> ERROR: {{ error }}</div>
+        
+        <main v-if="product" class="product-detail-grid">
+            <div class="product-image-gallery">
+                <div class="main-image">
+                    <img :src="mainImage" :alt="product.title">
+                </div>
+            </div>
+            <div class="product-info">
+                <h1>{{ product.title }}</h1>
+                <div class="price">{{ formattedPrice }}</div>
+                <p class="description" v-html="formattedDescription"></p>
+                
+                <div v-if="hasColors" class="option-group color-selector">
+                    <label>COLOR:</label>
+                    <div class="color-swatches">
+                        <div v-for="color in colors"
+                             :key="color.id"
+                             class="swatch"
+                             :class="{ active: color.id === selectedColorId }"
+                             :title="color.title"
+                             :style="{ backgroundColor: color.hex }"
+                             @click="selectColor(color.id)">
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="currentSizes.length > 0" class="option-group variant-selector">
+                    <label>{{ sizeOption.name || 'OPTION' }}:</label>
+                    <select v-model="selectedSizeId">
+                        <option v-for="size in currentSizes" :value="size.id">{{ size.title }}</option>
+                    </select>
+                </div>
+
+                <button class="buy-now">Acquire</button>
+            </div>
+        </main>
     </div>
+
     <footer><p>&copy; 2025 Maison Maduu & Co. All Timelines Reserved.</p></footer>
 
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
 
-        function initializePlexusBackground() { /* ... full plexus code ... */ }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            initializePlexusBackground();
-            const container = document.getElementById('product-detail-container');
-            const params = new URLSearchParams(window.location.search);
-            const productId = params.get('id');
-            
-            if (!productId) {
-                container.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: NO ARTIFACT ID SPECIFIED_</p>`;
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const product = await response.json();
-                
-                document.title = `${product.title || 'Artifact'} // Maison Maduu & Co.`;
-                
-                // --- START: NEW, SIMPLIFIED & CORRECTED SCRIPT ---
-
-                const options = product.options || [];
-                const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
-                const images = product.images || [];
-
-                const colorOption = options.find(opt => opt.type === 'color');
-                const sizeOption = options.find(opt => opt.type === 'size');
-                
-                let optionsHTML = '';
-                if (colorOption && sizeOption) {
-                    optionsHTML = `
-                        <div class="option-group color-selector">
-                            <label>COLOR:</label>
-                            <div class="color-swatches" id="color-swatches"></div>
-                        </div>
-                        <div class="option-group variant-selector">
-                            <label>SIZE:</label>
-                            <select id="variant-select"></select>
-                        </div>`;
-                } else if (enabledVariants.length > 0) {
-                    optionsHTML = `
-                        <div class="option-group variant-selector">
-                            <label>OPTIONS:</label>
-                            <select id="variant-select"></select>
-                        </div>`;
-                }
-
-                container.innerHTML = `
-                    <main class="product-detail-grid">
-                        <div class="product-image-gallery">
-                            <div class="main-image"><img src="${images[0]?.src || ''}" alt="${product.title || ''}" id="main-product-image"></div>
-                        </div>
-                        <div class="product-info">
-                            <h1>${product.title || 'Untitled Artifact'}</h1>
-                            <div class="price" id="variant-price"></div>
-                            <p class="description">${product.description?.replace(/\\r\\n|\\n/g, '<br>') || 'No description available.'}</p>
-                            ${optionsHTML}
-                            <button class="buy-now">Acquire</button>
-                        </div>
-                    </main>`;
-
-                const mainImage = document.getElementById('main-product-image');
-                const priceDisplay = document.getElementById('variant-price');
-                const variantSelect = document.getElementById('variant-select');
-
-                if (colorOption && sizeOption) {
-                    const colorSwatchesContainer = document.getElementById('color-swatches');
-                    
-                    const variantsByColor = {};
-                    enabledVariants.forEach(v => {
-                        const colorValueId = v.options.find(o => o.option_id === colorOption.id)?.value_id;
-                        if (colorValueId) {
-                            if (!variantsByColor[colorValueId]) variantsByColor[colorValueId] = [];
-                            variantsByColor[colorValueId].push(v);
-                        }
-                    });
-                    
-                    Object.keys(variantsByColor).forEach(colorId => {
-                        const colorInfo = colorOption.values.find(v => v.id == colorId);
-                        if (colorInfo?.title && colorInfo?.colors) {
-                            const swatch = document.createElement('div');
-                            swatch.className = 'swatch';
-                            swatch.dataset.colorId = colorId;
-                            swatch.title = colorInfo.title;
-                            swatch.style.backgroundColor = colorInfo.colors[0];
-                            colorSwatchesContainer.appendChild(swatch);
-                        }
-                    });
-
-                    const updatePrice = () => {
-                        const selectedVariant = enabledVariants.find(v => v.id == variantSelect.value);
-                        if (selectedVariant?.price) priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
-                    };
-
-                    const updateSizeOptions = (colorId) => {
-                        const variantsForColor = variantsByColor[colorId] || [];
-                        variantSelect.innerHTML = '';
-                        variantsForColor.forEach(v => {
-                            const sizeValueId = v.options.find(o => o.option_id === sizeOption.id)?.value_id;
-                            const sizeInfo = sizeOption.values.find(val => val.id === sizeValueId);
-                            if (sizeInfo?.title) {
-                                const option = document.createElement('option');
-                                option.value = v.id;
-                                option.textContent = sizeInfo.title;
-                                variantSelect.appendChild(option);
-                            }
+        new Vue({
+            el: '#app',
+            data: {
+                loading: true,
+                error: null,
+                product: null,
+                selectedColorId: null,
+                selectedSizeId: null,
+                mainImage: ''
+            },
+            computed: {
+                // Find the master color and size options
+                colorOption() {
+                    return this.product?.options?.find(opt => opt.type === 'color');
+                },
+                sizeOption() {
+                    return this.product?.options?.find(opt => opt.type === 'size');
+                },
+                hasColors() {
+                    return this.colorOption && this.sizeOption;
+                },
+                // Get a list of available colors
+                colors() {
+                    if (!this.hasColors) return [];
+                    const colorIds = new Set(this.enabledVariants.map(v => v.options.find(o => o.option_id === this.colorOption.id).value_id));
+                    return this.colorOption.values.filter(v => colorIds.has(v.id)).map(c => ({
+                        id: c.id,
+                        title: c.title,
+                        hex: c.colors[0]
+                    }));
+                },
+                // Get a list of available sizes for the CURRENTLY selected color
+                currentSizes() {
+                    if (!this.hasColors) return [];
+                    return this.enabledVariants
+                        .filter(v => v.options.find(o => o.option_id === this.colorOption.id).value_id === this.selectedColorId)
+                        .map(v => {
+                            const sizeValueId = v.options.find(o => o.option_id === this.sizeOption.id).value_id;
+                            return this.sizeOption.values.find(s => s.id === sizeValueId);
                         });
-                        updatePrice();
-                    };
-
-                    colorSwatchesContainer.addEventListener('click', (e) => {
-                        if (e.target.classList.contains('swatch')) {
-                            const colorId = e.target.dataset.colorId;
-                            document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-                            e.target.classList.add('active');
-                            
-                            const firstVariantOfColor = variantsByColor[colorId]?.[0];
-                            if (firstVariantOfColor) {
-                                const imageForColor = images.find(img => img.variant_ids.includes(firstVariantOfColor.id));
-                                if(imageForColor?.src) mainImage.src = imageForColor.src;
-                            }
-                            updateSizeOptions(colorId);
-                        }
-                    });
-                    
-                    variantSelect.addEventListener('change', updatePrice);
-                    
-                    const firstColorId = Object.keys(variantsByColor)[0];
-                    if (firstColorId && colorSwatchesContainer.querySelector('.swatch')) {
-                        colorSwatchesContainer.querySelector('.swatch').classList.add('active');
-                        updateSizeOptions(firstColorId);
+                },
+                // Get the full data for the currently selected variant
+                selectedVariant() {
+                    if (!this.product) return null;
+                    if (!this.hasColors) {
+                         return this.enabledVariants.find(v => v.id == this.selectedSizeId);
                     }
-
-                } else {
-                    enabledVariants.forEach(variant => {
-                        const option = document.createElement('option');
-                        option.value = variant.id;
-                        option.textContent = variant.title || `Option ${variant.id}`;
-                        variantSelect.appendChild(option);
+                    return this.enabledVariants.find(v => {
+                        const hasColor = v.options.some(o => o.option_id === this.colorOption.id && o.value_id === this.selectedColorId);
+                        const hasSize = v.options.some(o => o.option_id === this.sizeOption.id && o.value_id === this.selectedSizeId);
+                        return hasColor && hasSize;
                     });
-                    
-                    const updateSimpleProduct = () => {
-                        const selectedVariant = enabledVariants.find(v => v.id == variantSelect.value);
-                        if (selectedVariant) {
-                            priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
-                            const newImage = images.find(img => img.variant_ids.includes(selectedVariant.id));
-                            if(newImage?.src) mainImage.src = newImage.src;
-                        }
-                    };
-                    
-                    variantSelect.addEventListener('change', updateSimpleProduct);
-                    if (enabledVariants.length > 0) updateSimpleProduct();
+                },
+                // Filter variants to only the ones we can sell
+                enabledVariants() {
+                    return this.product?.variants?.filter(v => v.is_enabled) || [];
+                },
+                formattedPrice() {
+                    if (!this.selectedVariant) return 'N/A';
+                    return `$${(this.selectedVariant.price / 100).toFixed(2)}`;
+                },
+                formattedDescription() {
+                    return this.product?.description?.replace(/\\r\\n/g, '<br>') || '';
                 }
-
-            } catch (e) {
-                console.error("Error fetching or rendering product:", e);
-                container.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: ARTIFACT DATA CORRUPTED_</p>`;
+            },
+            methods: {
+                async fetchProduct(productId) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
+                        if (!response.ok) throw new Error('Artifact data corrupted');
+                        this.product = await response.json();
+                        this.initializeSelections();
+                    } catch (e) {
+                        console.error(e);
+                        this.error = "Could not establish connection to product database.";
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                initializeSelections() {
+                    if (this.hasColors) {
+                        // For products with colors
+                        if (this.colors.length > 0) {
+                            this.selectColor(this.colors[0].id);
+                        }
+                    } else {
+                        // For simple products
+                        if (this.enabledVariants.length > 0) {
+                           this.selectedSizeId = this.enabledVariants[0].id;
+                           this.updateMainImage();
+                        }
+                    }
+                },
+                selectColor(colorId) {
+                    this.selectedColorId = colorId;
+                    // Automatically select the first available size for the new color
+                    if (this.currentSizes.length > 0) {
+                        this.selectedSizeId = this.currentSizes[0].id;
+                    }
+                    this.updateMainImage();
+                },
+                updateMainImage() {
+                    if (!this.selectedVariant) return;
+                    const imageForVariant = this.product.images.find(img => img.variant_ids.includes(this.selectedVariant.id));
+                    if (imageForVariant) {
+                        this.mainImage = imageForVariant.src;
+                    }
+                }
+            },
+            watch: {
+                // When the selected size changes, update the main image
+                selectedSizeId(newId, oldId) {
+                    this.updateMainImage();
+                }
+            },
+            created() {
+                const params = new URLSearchParams(window.location.search);
+                const productId = params.get('id');
+                if (productId) {
+                    this.fetchProduct(productId);
+                } else {
+                    this.error = "No Artifact ID specified.";
+                    this.loading = false;
+                }
             }
         });
-        
-        function initializePlexusBackground() { /* ... full plexus code ... */ }
     </script>
 </body>
 </html>
