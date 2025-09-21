@@ -54,7 +54,37 @@
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
 
-        function initializePlexusBackground() { /* ... full plexus code ... */ }
+        // Placeholder for the plexus background function
+        function initializePlexusBackground() {
+            // Your existing plexus background canvas drawing code goes here
+            const canvas = document.getElementById('background-canvas');
+            if (!canvas) return; // Ensure canvas exists
+            const ctx = canvas.getContext('2d');
+            let animationFrameId;
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Basic animation loop - replace with your actual plexus logic
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Example: Draw a simple rotating rectangle
+                ctx.save();
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                ctx.rotate(Date.now() / 5000 % (Math.PI * 2));
+                ctx.fillStyle = 'rgba(0, 245, 212, 0.1)';
+                ctx.fillRect(-50, -50, 100, 100);
+                ctx.restore();
+                animationFrameId = requestAnimationFrame(animate);
+            }
+            animate();
+            // End of placeholder
+        }
 
         document.addEventListener('DOMContentLoaded', async () => {
             initializePlexusBackground();
@@ -68,6 +98,7 @@
             }
 
             try {
+                // Fetch product data from your backend
                 const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const product = await response.json();
@@ -86,6 +117,7 @@
             const container = document.getElementById('product-detail-container');
             
             const options = product.options || [];
+            // Filter enabled variants right away
             const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
             const images = product.images || [];
 
@@ -93,7 +125,8 @@
             const sizeOption = options.find(opt => opt.type === 'size');
             
             let optionsHTML = '';
-            if (colorOption && sizeOption) {
+            // Only show color/size selectors if both are present AND there are enabled variants
+            if (colorOption && sizeOption && enabledVariants.length > 0) {
                 optionsHTML = `
                     <div class="option-group color-selector">
                         <label>COLOR:</label>
@@ -104,36 +137,65 @@
                         <select id="variant-select"></select>
                     </div>`;
             } else if (enabledVariants.length > 0) {
+                // Fallback for products with only one type of option or non-color/size options
                 optionsHTML = `
                     <div class="option-group variant-selector">
                         <label>OPTIONS:</label>
                         <select id="variant-select"></select>
                     </div>`;
+            } else {
+                // No enabled variants or no options to display
+                optionsHTML = `<p class="message" style="color: var(--text-secondary); font-size: 0.9em;">No available options for this artifact.</p>`;
             }
+
+            // Determine the initial image to display.
+            // If there's an image with variant_ids matching an enabled variant, use it.
+            // Otherwise, fall back to the first image.
+            let initialImageUrl = images[0]?.src || '';
+            if (enabledVariants.length > 0) {
+                const firstEnabledVariantId = enabledVariants[0].id;
+                const imageForFirstVariant = images.find(img => img.variant_ids.includes(firstEnabledVariantId));
+                if (imageForFirstVariant) {
+                    initialImageUrl = imageForFirstVariant.src;
+                }
+            }
+
 
             container.innerHTML = `
                 <main class="product-detail-grid">
                     <div class="product-image-gallery">
-                        <div class="main-image"><img src="${images[0]?.src || ''}" alt="${product.title || ''}" id="main-product-image"></div>
+                        <div class="main-image"><img src="${initialImageUrl}" alt="${product.title || ''}" id="main-product-image"></div>
                     </div>
                     <div class="product-info">
                         <h1>${product.title || 'Untitled Artifact'}</h1>
                         <div class="price" id="variant-price"></div>
                         <p class="description">${product.description?.replace(/\\r\\n/g, '<br>') || 'No description available.'}</p>
                         ${optionsHTML}
-                        <button class="buy-now">Acquire</button>
+                        ${enabledVariants.length > 0 ? `<button class="buy-now">Acquire</button>` : ''}
                     </div>
                 </main>`;
 
-            setupEventListeners(product);
+            // Only setup event listeners if there are enabled variants to interact with
+            if (enabledVariants.length > 0) {
+                setupEventListeners(product);
+            } else {
+                 // No variants, no price.
+                 const priceDisplay = document.getElementById('variant-price');
+                 if(priceDisplay) priceDisplay.textContent = 'N/A';
+            }
         }
 
         function setupEventListeners(product) {
             const mainImage = document.getElementById('main-product-image');
             const priceDisplay = document.getElementById('variant-price');
             const variantSelect = document.getElementById('variant-select');
+            const colorSwatchesContainer = document.getElementById('color-swatches'); // Can be null if no color option
 
-            if (!priceDisplay || !variantSelect) return;
+            // Ensure these elements exist before proceeding
+            if (!mainImage || !priceDisplay || !variantSelect) {
+                console.warn("Missing critical product elements (image, price, or variant select).");
+                return;
+            }
 
             const options = product.options || [];
             const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
@@ -141,80 +203,156 @@
             const colorOption = options.find(opt => opt.type === 'color');
             const sizeOption = options.find(opt => opt.type === 'size');
 
-            if (colorOption && sizeOption) {
-                const colorSwatchesContainer = document.getElementById('color-swatches');
-                if (!colorSwatchesContainer) return;
-
-                const variantsByColor = {};
+            // --- Case 1: Product has both Color and Size options ---
+            if (colorOption && sizeOption && colorSwatchesContainer) {
+                // Group variants by color ID for easier lookup
+                const variantsByColorId = new Map(); // Map<colorId, Set<variant>>
                 enabledVariants.forEach(v => {
-                    const colorId = v.options.find(o => o.id === colorOption.id)?.value;
-                    if (colorId) {
-                        if (!variantsByColor[colorId]) variantsByColor[colorId] = [];
-                        variantsByColor[colorId].push(v);
+                    const colorOptionValue = v.options.find(o => o.option_id === colorOption.id)?.value_id; // Use option_id and value_id
+                    if (colorOptionValue) {
+                        if (!variantsByColorId.has(colorOptionValue)) {
+                            variantsByColorId.set(colorOptionValue, new Set());
+                        }
+                        variantsByColorId.get(colorOptionValue).add(v);
                     }
                 });
-                
-                Object.keys(variantsByColor).forEach(colorId => {
-                    const colorInfo = colorOption.values.find(v => v.id == colorId);
-                    if (colorInfo?.title && colorInfo?.colors) {
+
+                // Populate color swatches
+                // Ensure we only show swatches for colors that have at least one enabled variant
+                const availableColorValueIds = new Set(Array.from(variantsByColorId.keys()));
+                colorOption.values.forEach(colorValue => {
+                    if (availableColorValueIds.has(colorValue.id)) { // Only add swatch if color has enabled variants
                         const swatch = document.createElement('div');
                         swatch.className = 'swatch';
-                        swatch.dataset.colorId = colorId;
-                        swatch.title = colorInfo.title;
-                        swatch.style.backgroundColor = colorInfo.colors[0];
+                        swatch.dataset.colorValueId = colorValue.id; // Store value_id
+                        swatch.title = colorValue.title;
+                        // Use the first color from the array for the swatch background
+                        swatch.style.backgroundColor = colorValue.colors && colorValue.colors.length > 0 ? colorValue.colors[0] : '#cccccc'; // Fallback color
                         colorSwatchesContainer.appendChild(swatch);
                     }
                 });
 
-                const updatePrice = () => {
-                    const selectedVariant = enabledVariants.find(v => v.id == variantSelect.value);
-                    if (selectedVariant?.price) priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
-                };
+                // Function to update the size dropdown based on selected color
+                const updateSizeOptions = (selectedColorValueId) => {
+                    variantSelect.innerHTML = ''; // Clear previous sizes
 
-                const updateSizeOptions = (colorId) => {
-                    const variantsForColor = variantsByColor[colorId] || [];
-                    variantSelect.innerHTML = '';
-                    variantsForColor.forEach(v => {
-                        const sizeId = v.options.find(o => o.id === sizeOption.id)?.value;
-                        const sizeInfo = sizeOption.values.find(val => val.id === sizeId);
-                        if (sizeInfo?.title) {
+                    const variantsForSelectedColor = Array.from(variantsByColorId.get(selectedColorValueId) || []);
+                    
+                    // Get unique size value IDs for the selected color
+                    const uniqueSizeValueIds = new Set();
+                    variantsForSelectedColor.forEach(v => {
+                        const sizeValueId = v.options.find(o => o.option_id === sizeOption.id)?.value_id;
+                        if (sizeValueId) uniqueSizeValueIds.add(sizeValueId);
+                    });
+
+                    // Filter size option values to only show relevant ones
+                    const availableSizeValues = sizeOption.values.filter(sizeValue => uniqueSizeValueIds.has(sizeValue.id));
+
+                    // Sort sizes if necessary (e.g., S, M, L, XL - you'd need a custom sort order)
+                    // For now, they'll appear in the order from Printify API
+                    
+                    if (availableSizeValues.length === 0) {
+                        const option = document.createElement('option');
+                        option.textContent = 'No sizes available';
+                        option.value = '';
+                        variantSelect.appendChild(option);
+                        priceDisplay.textContent = 'N/A'; // No variants, no price
+                        mainImage.src = product.images[0]?.src || ''; // Fallback to first product image
+                        return;
+                    }
+
+                    availableSizeValues.forEach(sizeValue => {
+                        // Find a variant that matches BOTH the selected color and this size
+                        const matchingVariant = variantsForSelectedColor.find(v => 
+                            v.options.some(o => o.option_id === sizeOption.id && o.value_id === sizeValue.id)
+                        );
+
+                        if (matchingVariant) {
                             const option = document.createElement('option');
-                            option.value = v.id;
-                            option.textContent = sizeInfo.title;
+                            option.value = matchingVariant.id; // The variant ID is what we need for price and image
+                            option.textContent = sizeValue.title;
                             variantSelect.appendChild(option);
                         }
                     });
-                    updatePrice();
+
+                    // After updating sizes, trigger a change to set price and image for the first selected size
+                    variantSelect.dispatchEvent(new Event('change'));
                 };
 
+                // Function to update the main product image
+                const updateMainImage = (variantId) => {
+                    const selectedVariant = enabledVariants.find(v => v.id === parseInt(variantId));
+                    if (selectedVariant) {
+                        const imageForVariant = product.images.find(img => img.variant_ids.includes(selectedVariant.id));
+                        if (imageForVariant) {
+                            mainImage.src = imageForVariant.src;
+                        } else {
+                            // Fallback: If no specific image for this variant, try to find one by color
+                            const colorValueId = selectedVariant.options.find(o => o.option_id === colorOption.id)?.value_id;
+                            if (colorValueId) {
+                                // Find any image associated with a variant of this color
+                                const imageByColor = product.images.find(img => 
+                                    img.variant_ids.some(vid => 
+                                        enabledVariants.find(ev => ev.id === vid && ev.options.some(o => o.option_id === colorOption.id && o.value_id === colorValueId))
+                                    )
+                                );
+                                if (imageByColor) {
+                                    mainImage.src = imageByColor.src;
+                                } else {
+                                    mainImage.src = product.images[0]?.src || ''; // Fallback to default
+                                }
+                            } else {
+                                mainImage.src = product.images[0]?.src || ''; // Fallback to default
+                            }
+                        }
+                    } else {
+                        mainImage.src = product.images[0]?.src || ''; // Fallback to default if no variant selected
+                    }
+                };
+
+                // Event listener for color swatch clicks
                 colorSwatchesContainer.addEventListener('click', (e) => {
                     if (e.target.classList.contains('swatch')) {
-                        const colorId = e.target.dataset.colorId;
+                        const selectedColorValueId = e.target.dataset.colorValueId;
                         document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
                         e.target.classList.add('active');
                         
-                        const firstVariantOfColor = variantsByColor[colorId]?.[0];
-                        if (firstVariantOfColor) {
-                            const imageForColor = product.images.find(img => img.variant_ids.includes(firstVariantOfColor.id));
-                            if(imageForColor) mainImage.src = imageForColor.src;
-                        }
-                        updateSizeOptions(colorId);
+                        updateSizeOptions(selectedColorValueId);
                     }
                 });
-                
-                variantSelect.addEventListener('change', updatePrice);
-                
-                const firstColorId = Object.keys(variantsByColor)[0];
-                if (firstColorId && colorSwatchesContainer.querySelector('.swatch')) {
-                    colorSwatchesContainer.querySelector('.swatch').classList.add('active');
-                    updateSizeOptions(firstColorId);
+
+                // Event listener for size dropdown changes
+                variantSelect.addEventListener('change', () => {
+                    const selectedVariantId = variantSelect.value;
+                    const selectedVariant = enabledVariants.find(v => v.id == selectedVariantId);
+                    
+                    if (selectedVariant) {
+                        priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
+                        updateMainImage(selectedVariantId);
+                    } else {
+                        priceDisplay.textContent = 'N/A';
+                        mainImage.src = product.images[0]?.src || ''; // Fallback
+                    }
+                });
+
+                // Initial setup: Select the first available color, update sizes and image/price
+                const firstColorSwatch = colorSwatchesContainer.querySelector('.swatch');
+                if (firstColorSwatch) {
+                    firstColorSwatch.classList.add('active');
+                    const initialColorValueId = firstColorSwatch.dataset.colorValueId;
+                    updateSizeOptions(initialColorValueId);
+                    // Ensure the initial image is set based on the first selected variant
+                    const initialVariantId = variantSelect.value;
+                    if (initialVariantId) updateMainImage(initialVariantId);
                 }
 
-            } else {
+            } 
+            // --- Case 2: Product has options, but not necessarily color/size, or only one type ---
+            else {
                 enabledVariants.forEach(variant => {
                     const option = document.createElement('option');
                     option.value = variant.id;
-                    option.textContent = variant.title || `Option ${variant.id}`;
+                    option.textContent = variant.title || `Option ${variant.id}`; // Printify variant title combines options
                     variantSelect.appendChild(option);
                 });
                 
@@ -224,15 +362,19 @@
                         priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
                         const newImage = product.images.find(img => img.variant_ids.includes(selectedVariant.id));
                         if(newImage?.src) mainImage.src = newImage.src;
+                        else mainImage.src = product.images[0]?.src || ''; // Fallback if no specific image for variant
+                    } else {
+                        priceDisplay.textContent = 'N/A';
+                        mainImage.src = product.images[0]?.src || ''; // Fallback
                     }
                 };
                 
                 variantSelect.addEventListener('change', updateSimpleProduct);
                 if (enabledVariants.length > 0) updateSimpleProduct();
+                else priceDisplay.textContent = 'N/A'; // No enabled variants, no price
             }
         }
         
-        function initializePlexusBackground() { /* ... full plexus code ... */ }
     </script>
 </body>
 </html>
