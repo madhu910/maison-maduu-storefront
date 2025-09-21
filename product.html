@@ -8,7 +8,7 @@
 <body>
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
-
+        
         function initializePlexusBackground() { /* ... */ }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -34,20 +34,126 @@
         function renderProductPage(product) {
             const container = document.getElementById('product-detail-container');
             
+            // --- NEW SAFETY CHECKS ---
             const options = product.options || [];
-            // --- THE FIX IS HERE ---
-            const variants = product.variants.filter(v => v.is_enabled); // Only use ENABLED variants
+            const variants = (product.variants || []).filter(v => v.is_enabled);
             const images = product.images || [];
 
             const colorOption = options.find(opt => /Color/i.test(opt.name));
             const sizeOption = options.find(opt => /Size/i.test(opt.name));
             
             let optionsHTML = '';
-            // ... (The rest of the rendering logic is the same) ...
+            if (colorOption && sizeOption) {
+                optionsHTML = `
+                    <div class="option-group color-selector">
+                        <label>COLOR:</label>
+                        <div class="color-swatches" id="color-swatches"></div>
+                    </div>
+                    <div class="option-group variant-selector">
+                        <label>SIZE:</label>
+                        <select id="variant-select"></select>
+                    </div>`;
+            } else if (variants.length > 0) {
+                optionsHTML = `
+                    <div class="option-group variant-selector">
+                        <label>OPTIONS:</label>
+                        <select id="variant-select"></select>
+                    </div>`;
+            }
+
+            const mainImageSrc = images[0]?.src || '';
+            const description = product.description?.replace(/\\r\\n/g, '<br>') || 'No description available.';
+            const title = product.title || 'Untitled Artifact';
+            const initialPrice = variants[0]?.price ? `$${(variants[0].price / 100).toFixed(2)}` : 'N/A';
+
+            container.innerHTML = `
+                <main class="product-detail-grid">
+                    <div class="product-image-gallery">
+                        <div class="main-image"><img src="${mainImageSrc}" alt="${title}" id="main-product-image"></div>
+                    </div>
+                    <div class="product-info">
+                        <h1>${title}</h1>
+                        <div class="price" id="variant-price">${initialPrice}</div>
+                        <p class="description">${description}</p>
+                        ${optionsHTML}
+                        <button class="buy-now">Acquire</button>
+                    </div>
+                </main>`;
+
+            setupEventListeners(product);
         }
 
         function setupEventListeners(product) {
-            // ... (This function now also implicitly uses the filtered `variants` from the above scope) ...
+            const mainImage = document.getElementById('main-product-image');
+            const priceDisplay = document.getElementById('variant-price');
+            const variantSelect = document.getElementById('variant-select');
+
+            if (!priceDisplay || !variantSelect) return;
+
+            const options = product.options || [];
+            const variants = (product.variants || []).filter(v => v.is_enabled);
+            
+            const colorOption = options.find(opt => /Color/i.test(opt.name));
+            const sizeOption = options.find(opt => /Size/i.test(opt.name));
+
+            if (colorOption && sizeOption) {
+                // Logic for products with colors and sizes
+                const colorSwatchesContainer = document.getElementById('color-swatches');
+                if (!colorSwatchesContainer) return;
+
+                const variantsByColor = {};
+                variants.forEach(v => {
+                    const colorId = v.options.find(o => o.id === colorOption.id)?.value;
+                    if (colorId) {
+                        if (!variantsByColor[colorId]) variantsByColor[colorId] = [];
+                        variantsByColor[colorId].push(v);
+                    }
+                });
+                
+                Object.keys(variantsByColor).forEach(colorId => {
+                    const colorInfo = colorOption.values.find(v => v.id == colorId);
+                    if (colorInfo?.title && colorInfo?.colors) {
+                        const swatch = document.createElement('div');
+                        swatch.className = 'swatch';
+                        swatch.dataset.colorId = colorId;
+                        swatch.title = colorInfo.title;
+                        swatch.style.backgroundColor = colorInfo.colors[0];
+                        colorSwatchesContainer.appendChild(swatch);
+                    }
+                });
+
+                const updatePrice = () => { /* ... unchanged ... */ };
+                const updateSizeOptions = (colorId) => { /* ... unchanged ... */ };
+                colorSwatchesContainer.addEventListener('click', (e) => { /* ... unchanged ... */ });
+                variantSelect.addEventListener('change', updatePrice);
+                
+                const firstColorId = Object.keys(variantsByColor)[0];
+                if (firstColorId && colorSwatchesContainer.querySelector('.swatch')) {
+                    colorSwatchesContainer.querySelector('.swatch').classList.add('active');
+                    updateSizeOptions(firstColorId);
+                }
+
+            } else {
+                // Logic for simple products
+                variants.forEach(variant => {
+                    const option = document.createElement('option');
+                    option.value = variant.id;
+                    option.textContent = variant.title || `Option ${variant.id}`;
+                    variantSelect.appendChild(option);
+                });
+                
+                const updateSimpleProduct = () => {
+                    const selectedVariant = variants.find(v => v.id == variantSelect.value);
+                    if (selectedVariant) {
+                        priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
+                        const newImage = product.images.find(img => img.variant_ids.includes(selectedVariant.id));
+                        if(newImage?.src) mainImage.src = newImage.src;
+                    }
+                };
+                
+                variantSelect.addEventListener('change', updateSimpleProduct);
+                if (variants.length > 0) updateSimpleProduct();
+            }
         }
     </script>
 </body>
