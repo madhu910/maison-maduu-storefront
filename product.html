@@ -89,12 +89,10 @@
             const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
             const images = product.images || [];
 
-            // Find options using the reliable `type` property from the documentation
             const colorOption = options.find(opt => opt.type === 'color');
             const sizeOption = options.find(opt => opt.type === 'size');
             
             let optionsHTML = '';
-            // Only show the color/size UI if BOTH types are present
             if (colorOption && sizeOption) {
                 optionsHTML = `
                     <div class="option-group color-selector">
@@ -113,7 +111,6 @@
                     </div>`;
             }
 
-            // Render the main page structure
             container.innerHTML = `
                 <main class="product-detail-grid">
                     <div class="product-image-gallery">
@@ -128,18 +125,23 @@
                     </div>
                 </main>`;
 
-            setupEventListeners(product, { colorOption, sizeOption, enabledVariants, images });
+            setupEventListeners(product);
         }
 
-        function setupEventListeners(product, { colorOption, sizeOption, enabledVariants, images }) {
+        function setupEventListeners(product) {
             const mainImage = document.getElementById('main-product-image');
             const priceDisplay = document.getElementById('variant-price');
             const variantSelect = document.getElementById('variant-select');
 
             if (!priceDisplay || !variantSelect) return;
 
+            const options = product.options || [];
+            const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
+            
+            const colorOption = options.find(opt => opt.type === 'color');
+            const sizeOption = options.find(opt => opt.type === 'size');
+
             if (colorOption && sizeOption) {
-                // --- LOGIC FOR PRODUCTS WITH COLORS & SIZES ---
                 const colorSwatchesContainer = document.getElementById('color-swatches');
                 if (!colorSwatchesContainer) return;
 
@@ -193,8 +195,8 @@
                         
                         const firstVariantOfColor = variantsByColor[colorId]?.[0];
                         if (firstVariantOfColor) {
-                            const imageForColor = images.find(img => img.variant_ids.includes(firstVariantOfColor.id));
-                            if(imageForColor?.src) mainImage.src = imageForColor.src;
+                            const imageForColor = product.images.find(img => img.variant_ids.includes(firstVariantOfColor.id));
+                            if(imageForColor) mainImage.src = imageForColor.src;
                         }
                         updateSizeOptions(colorId);
                     }
@@ -209,7 +211,6 @@
                 }
 
             } else {
-                // --- LOGIC FOR PRODUCTS WITHOUT COLORS (Simple Products) ---
                 enabledVariants.forEach(variant => {
                     const option = document.createElement('option');
                     option.value = variant.id;
@@ -221,7 +222,7 @@
                     const selectedVariant = enabledVariants.find(v => v.id == variantSelect.value);
                     if (selectedVariant) {
                         priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
-                        const newImage = images.find(img => img.variant_ids.includes(selectedVariant.id));
+                        const newImage = product.images.find(img => img.variant_ids.includes(selectedVariant.id));
                         if(newImage?.src) mainImage.src = newImage.src;
                     }
                 };
