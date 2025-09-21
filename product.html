@@ -62,9 +62,9 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             initializePlexusBackground();
+            const container = document.getElementById('product-detail-container');
             const params = new URLSearchParams(window.location.search);
             const productId = params.get('id');
-            const container = document.getElementById('product-detail-container');
             
             if (!productId) {
                 container.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: NO ARTIFACT ID SPECIFIED_</p>`;
@@ -73,15 +73,15 @@
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
+                if (!response.ok) throw new Error('Network response was not ok');
                 const product = await response.json();
                 
                 document.title = `${product.title} // Maison Maduu & Co.`;
                 
-                // Call the correct function to render the page based on product type
                 renderProductPage(product);
 
             } catch (e) {
-                console.error("Error fetching product data:", e);
+                console.error("Error fetching or rendering product:", e);
                 container.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: ARTIFACT DATA CORRUPTED_</p>`;
             }
         });
@@ -92,47 +92,27 @@
             const sizeOption = product.options.find(opt => opt.name === 'Sizes');
             
             let optionsHTML = '';
-
-            // Check if the product is a standard apparel item with colors and sizes
+            
+            // Generate the correct HTML for the product options based on type
             if (colorOption && sizeOption) {
-                const variantsByColor = {};
-                product.variants.forEach(variant => {
-                    const colorValueId = variant.options.find(opt => opt.id === colorOption.id).value;
-                    if (!variantsByColor[colorValueId]) { variantsByColor[colorValueId] = []; }
-                    variantsByColor[colorValueId].push(variant);
-                });
-                
-                let colorsHTML = '';
-                for (const colorId in variantsByColor) {
-                    const colorInfo = colorOption.values.find(v => v.id == colorId);
-                    colorsHTML += `<div class="swatch" data-color-id="${colorId}" title="${colorInfo.title}" style="background-color: ${colorInfo.colors[0]};"></div>`;
-                }
                 optionsHTML = `
                     <div class="option-group color-selector">
                         <label>COLOR:</label>
-                        <div class="color-swatches" id="color-swatches">${colorsHTML}</div>
+                        <div class="color-swatches" id="color-swatches"></div>
                     </div>
                     <div class="option-group variant-selector">
                         <label>SIZE:</label>
                         <select id="variant-select"></select>
-                    </div>
-                `;
+                    </div>`;
             } else {
-                // Fallback for simple products (mugs, posters, etc.)
-                let variantsHTML = '';
-                product.variants.forEach(variant => {
-                    const price = (variant.price / 100).toFixed(2);
-                    variantsHTML += `<option value="${variant.id}">${variant.title} - $${price}</option>`;
-                });
                 optionsHTML = `
                     <div class="option-group variant-selector">
                         <label>OPTIONS:</label>
-                        <select id="variant-select">${variantsHTML}</select>
-                    </div>
-                `;
+                        <select id="variant-select"></select>
+                    </div>`;
             }
 
-            // Build the main page structure
+            // Render the main page structure
             container.innerHTML = `
                 <main class="product-detail-grid">
                     <div class="product-image-gallery">
@@ -141,14 +121,14 @@
                     </div>
                     <div class="product-info">
                         <h1>${product.title}</h1>
-                        <div class="price" id="variant-price">$${(product.variants[0].price / 100).toFixed(2)}</div>
+                        <div class="price" id="variant-price"></div>
                         <p class="description">${product.description.replace(/\\r\\n/g, '<br>')}</p>
                         ${optionsHTML}
                         <button class="buy-now">Acquire</button>
                     </div>
                 </main>`;
-            
-            // --- Activate Logic and Event Listeners ---
+
+            // Now that the HTML is in the DOM, we can safely set up the logic
             setupEventListeners(product);
         }
 
@@ -156,88 +136,119 @@
             const mainImage = document.getElementById('main-product-image');
             const priceDisplay = document.getElementById('variant-price');
             const variantSelect = document.getElementById('variant-select');
-            const colorSwatchesContainer = document.getElementById('color-swatches'); // Might not exist
+            const colorSwatchesContainer = document.getElementById('color-swatches');
             const thumbnailGallery = document.getElementById('thumbnail-gallery');
 
-            // Check again which type of product we have
             const colorOption = product.options.find(opt => opt.name === 'Colors');
             const sizeOption = product.options.find(opt => opt.name === 'Sizes');
 
             if (colorOption && sizeOption) {
-                // --- Logic for products WITH colors ---
-                const variantsByColor = {}; // Re-create for this scope
+                // --- LOGIC FOR PRODUCTS WITH COLORS ---
+                const variantsByColor = {};
                 product.variants.forEach(variant => {
-                    const colorValueId = variant.options.find(opt => opt.id === colorOption.id).value;
-                    if (!variantsByColor[colorValueId]) { variantsByColor[colorValueId] = []; }
-                    variantsByColor[colorValueId].push(variant);
+                    const colorId = variant.options.find(opt => opt.id === colorOption.id).value;
+                    if (!variantsByColor[colorId]) variantsByColor[colorId] = [];
+                    variantsByColor[colorId].push(variant);
                 });
-
-                const imagesByColor = {}; // Re-create for this scope
-                for (const colorValueId in variantsByColor) {
-                    imagesByColor[colorValueId] = [];
-                    const variantIdsForColor = variantsByColor[colorValueId].map(v => v.id);
-                    product.images.forEach(image => {
-                        if (image.variant_ids.some(vid => variantIdsForColor.includes(vid))) {
-                            if (!imagesByColor[colorValueId].some(img => img.src === image.src)) {
-                                imagesByColor[colorValueId].push(image);
-                            }
+                
+                const imagesByColor = {};
+                for (const colorId in variantsByColor) {
+                    imagesByColor[colorId] = [];
+                    const variantIds = variantsByColor[colorId].map(v => v.id);
+                    product.images.forEach(img => {
+                        if (img.variant_ids.some(vid => variantIds.includes(vid))) {
+                            if (!imagesByColor[colorId].find(i => i.src === img.src)) imagesByColor[colorId].push(img);
                         }
                     });
                 }
                 
-                function updateThumbnails(colorId) { /* ... same as before ... */ }
-                function updateSizeOptions(colorId) { /* ... same as before ... */ }
-                function updatePrice() { /* ... same as before ... */ }
+                // Populate color swatches
+                for (const colorId in variantsByColor) {
+                    const colorInfo = colorOption.values.find(v => v.id == colorId);
+                    const swatch = document.createElement('div');
+                    swatch.className = 'swatch';
+                    swatch.dataset.colorId = colorId;
+                    swatch.title = colorInfo.title;
+                    swatch.style.backgroundColor = colorInfo.colors[0];
+                    colorSwatchesContainer.appendChild(swatch);
+                }
 
+                const updatePrice = () => {
+                    const selectedVariant = product.variants.find(v => v.id == variantSelect.value);
+                    if (selectedVariant) priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
+                };
+
+                const updateSizeOptions = (colorId) => {
+                    const variants = variantsByColor[colorId];
+                    variantSelect.innerHTML = '';
+                    variants.forEach(variant => {
+                        const sizeId = variant.options.find(opt => opt.id === sizeOption.id).value;
+                        const sizeInfo = sizeOption.values.find(v => v.id == sizeId);
+                        const option = document.createElement('option');
+                        option.value = variant.id;
+                        option.textContent = sizeInfo.title;
+                        variantSelect.appendChild(option);
+                    });
+                    updatePrice();
+                };
+
+                const updateThumbnails = (colorId) => {
+                    thumbnailGallery.innerHTML = '';
+                    const images = imagesByColor[colorId] || [];
+                    images.forEach((image, index) => {
+                        const thumb = document.createElement('img');
+                        thumb.src = image.src;
+                        thumb.addEventListener('click', () => {
+                            mainImage.src = thumb.src;
+                            document.querySelectorAll('.thumbnail-image').forEach(t => t.classList.remove('active'));
+                            thumb.classList.add('active');
+                        });
+                        thumbnailGallery.appendChild(thumb);
+                    });
+                };
+                
                 colorSwatchesContainer.addEventListener('click', (e) => {
                     if (e.target.classList.contains('swatch')) {
                         const colorId = e.target.dataset.colorId;
-                        colorSwatchesContainer.querySelectorAll('.swatch').forEach(sw => sw.classList.remove('active'));
+                        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
                         e.target.classList.add('active');
-                        const firstImageForColor = imagesByColor[colorId] ? imagesByColor[colorId][0] : product.images[0];
-                        if (firstImageForColor) mainImage.src = firstImageForColor.src;
-                        updateThumbnails(colorId);
+                        mainImage.src = (imagesByColor[colorId] && imagesByColor[colorId][0].src) || product.images[0].src;
                         updateSizeOptions(colorId);
+                        updateThumbnails(colorId);
                     }
                 });
-                
+
                 variantSelect.addEventListener('change', updatePrice);
-                // Initial population for products with colors
+
+                // Initial setup
                 const firstColorId = Object.keys(variantsByColor)[0];
                 colorSwatchesContainer.querySelector('.swatch').classList.add('active');
-                updateThumbnails(firstColorId);
                 updateSizeOptions(firstColorId);
+                updateThumbnails(firstColorId);
 
             } else {
-                // --- Logic for products WITHOUT colors ---
-                updateThumbnailsForAllImages(); // Show all images as thumbnails
-                variantSelect.addEventListener('change', () => {
+                // --- LOGIC FOR PRODUCTS WITHOUT COLORS ---
+                product.variants.forEach(variant => {
+                    const option = document.createElement('option');
+                    option.value = variant.id;
+                    option.textContent = variant.title;
+                    variantSelect.appendChild(option);
+                });
+                
+                const updateSimpleProduct = () => {
                     const selectedVariant = product.variants.find(v => v.id == variantSelect.value);
                     if (selectedVariant) {
                         priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
                         const newImage = product.images.find(img => img.variant_ids.includes(selectedVariant.id));
                         if(newImage) mainImage.src = newImage.src;
                     }
-                });
-            }
-
-            function updateThumbnailsForAllImages() {
-                thumbnailGallery.innerHTML = '';
-                product.images.forEach((image, index) => {
-                    const thumb = document.createElement('img');
-                    thumb.src = image.src; thumb.loading = 'lazy'; thumb.alt = `Thumbnail ${index + 1}`;
-                    thumb.classList.add('thumbnail-image'); if (index === 0) thumb.classList.add('active');
-                    thumb.addEventListener('click', () => {
-                        mainImage.src = thumb.src;
-                        thumbnailGallery.querySelectorAll('.thumbnail-image').forEach(t => t.classList.remove('active'));
-                        thumb.classList.add('active');
-                    });
-                    thumbnailGallery.appendChild(thumb);
-                });
+                };
+                
+                variantSelect.addEventListener('change', updateSimpleProduct);
+                updateSimpleProduct(); // Set initial price
             }
         }
-        
-        // Full plexus function is needed here, along with the helper functions for color logic
+        function initializePlexusBackground() { /* ... full plexus code ... */ }
     </script>
 </body>
 </html>
