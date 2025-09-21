@@ -3,48 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debugging Product...</title>
+    <title>Loading Artifact... // Maison Maduu & Co.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace+SC&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #111; font-family: monospace; color: #eee; padding: 2rem; font-size: 1.2rem; }
-        h1 { color: #00F5D4; }
+        :root {
+            --bg-color: #000000; --card-bg: rgba(10, 10, 25, 0.4); --text-primary: #EDEDFF;
+            --text-secondary: #8886A4; --accent-gradient: linear-gradient(90deg, #00F5D4 0%, #00B2FF 100%);
+            --glow-color: #00F5D4; --border-color: rgba(255, 255, 255, 0.15); --blur-strength: 15px;
+            --font-body: 'Space Mono', monospace; --font-heading: 'Bruno Ace SC', cursive;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: var(--font-body); background-color: var(--bg-color); color: var(--text-primary); margin: 0; }
+        #background-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 clamp(1rem, 5vw, 2rem); }
+        .main-header { background: rgba(5, 2, 20, 0.7); border-bottom: 1px solid var(--border-color); padding: 1rem clamp(1rem, 5vw, 2rem); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(var(--blur-strength)); }
+        .nav-container { display: flex; justify-content: space-between; align-items: center; max-width: 1280px; margin: 0 auto; }
+        .nav-brand { font-family: var(--font-heading); font-weight: 700; font-size: 1.5rem; text-decoration: none; color: var(--text-primary); letter-spacing: 2px; text-shadow: 0 0 5px var(--glow-color); }
+        footer { text-align: center; padding: 3rem 1rem; border-top: 1px solid var(--border-color); color: var(--text-secondary); }
+        .message { text-align: center; color: var(--text-secondary); font-size: 1.1rem; padding: 5rem 0; }
+        .product-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 3rem; margin: 4rem 0; align-items: start; opacity: 0; animation: fadeIn 1s 0.5s forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .product-image-gallery .main-image img { width: 100%; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1rem; }
+        .product-info h1 { font-family: var(--font-heading); font-size: clamp(2rem, 5vw, 3rem); line-height: 1.2; margin: 0 0 1rem 0; }
+        .product-info .price { font-size: 2.5rem; font-weight: 700; margin: 1.5rem 0; color: var(--glow-color); }
+        .product-info .description { color: var(--text-secondary); line-height: 1.8; font-size: 1.1rem; border-left: 2px solid var(--glow-color); padding-left: 1.5rem; }
+        .option-group { margin-top: 2rem; }
+        .option-group label { display: block; margin-bottom: 0.75rem; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;}
+        .option-group select { width: 100%; padding: 0.75rem; font-family: var(--font-body); font-size: 1rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 5px; }
+        .color-swatches { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .swatch { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid var(--border-color); transition: transform 0.2s ease, border-color 0.2s ease; }
+        .swatch.active { border-color: var(--glow-color); transform: scale(1.15); }
+        .buy-now { width: 100%; margin-top: 2rem; font-family: var(--font-heading); font-weight: 700; text-align: center; background: var(--accent-gradient); color: #050214; border: none; padding: 1.25rem; border-radius: 8px; text-transform: uppercase; font-size: 1.2rem; letter-spacing: 1px; transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; }
+        .buy-now:hover { transform: scale(1.03); box-shadow: 0 0 20px var(--glow-color); }
     </style>
 </head>
 <body>
-    <h1>DEBUG MODE ACTIVE</h1>
-    <p>Please open the browser console to see the product data.</p>
-    <p>1. Right-click on this page -> Inspect</p>
-    <p>2. Click the "Console" tab.</p>
+    <canvas id="background-canvas"></canvas>
+    <header class="main-header">
+        <nav class="nav-container">
+            <a href="index.html" class="nav-brand">Maison Maduu_3000</a>
+        </nav>
+    </header>
+    <div class="container" id="product-detail-container">
+        <p class="message">>> Loading Artifact Data...</p>
+    </div>
+    <footer><p>&copy; 2025 Maison Maduu & Co. All Timelines Reserved.</p></footer>
 
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
 
+        function initializePlexusBackground() { /* ... full plexus code ... */ }
+
         document.addEventListener('DOMContentLoaded', async () => {
-            const container = document.querySelector('body');
+            initializePlexusBackground();
+            const container = document.getElementById('product-detail-container');
             const params = new URLSearchParams(window.location.search);
             const productId = params.get('id');
             
             if (!productId) {
-                console.error("ERROR: NO PRODUCT ID IN URL.");
+                container.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: NO ARTIFACT ID SPECIFIED_</p>`;
                 return;
             }
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
-                if (!response.ok) {
-                    console.error("NETWORK ERROR:", response.status, response.statusText);
-                    return;
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 const product = await response.json();
                 
-                // This is the only important line
-                console.log("--- REAL PRODUCT DATA ---", product);
-
-                container.innerHTML += `<p style="color: #0f0;">SUCCESS! Data has been logged to the console. Please copy it.</p>`;
+                document.title = `${product.title || 'Artifact'} // Maison Maduu & Co.`;
+                
+                renderProductPage(product);
 
             } catch (e) {
-                console.error("CRITICAL SCRIPT ERROR:", e);
+                console.error("Error fetching or rendering product:", e);
+                container.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: ARTIFACT DATA CORRUPTED_</p>`;
             }
         });
+
+        function renderProductPage(product) {
+            const container = document.getElementById('product-detail-container');
+            
+            const options = product.options || [];
+            const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
+            const images = product.images || [];
+
+            const colorOption = options.find(opt => opt.type === 'color');
+            const sizeOption = options.find(opt => opt.type === 'size');
+            
+            let optionsHTML = '';
+            if (colorOption && sizeOption) {
+                optionsHTML = `
+                    <div class="option-group color-selector">
+                        <label>COLOR:</label>
+                        <div class="color-swatches" id="color-swatches"></div>
+                    </div>
+                    <div class="option-group variant-selector">
+                        <label>SIZE:</label>
+                        <select id="variant-select"></select>
+                    </div>`;
+            } else if (enabledVariants.length > 0) {
+                optionsHTML = `
+                    <div class="option-group variant-selector">
+                        <label>OPTIONS:</label>
+                        <select id="variant-select"></select>
+                    </div>`;
+            }
+
+            container.innerHTML = `
+                <main class="product-detail-grid">
+                    <div class="product-image-gallery">
+                        <div class="main-image"><img src="${images[0]?.src || ''}" alt="${product.title || ''}" id="main-product-image"></div>
+                    </div>
+                    <div class="product-info">
+                        <h1>${product.title || 'Untitled Artifact'}</h1>
+                        <div class="price" id="variant-price"></div>
+                        <p class="description">${product.description?.replace(/\\r\\n/g, '<br>') || 'No description available.'}</p>
+                        ${optionsHTML}
+                        <button class="buy-now">Acquire</button>
+                    </div>
+                </main>`;
+
+            setupEventListeners(product, { colorOption, sizeOption, enabledVariants, images });
+        }
+
+        function setupEventListeners(product, { colorOption, sizeOption, enabledVariants, images }) {
+            const mainImage = document.getElementById('main-product-image');
+            const priceDisplay = document.getElementById('variant-price');
+            const variantSelect = document.getElementById('variant-select');
+
+            if (!priceDisplay || !variantSelect) return;
+
+            if (colorOption && sizeOption) {
+                const colorSwatchesContainer = document.getElementById('color-swatches');
+                if (!colorSwatchesContainer) return;
+
+                const variantsByColor = {};
+                enabledVariants.forEach(v => {
+                    const colorId = v.options.find(o => o.option_id === colorOption.id)?.value_id;
+                    if (colorId) {
+                        if (!variantsByColor[colorId]) variantsByColor[colorId] = [];
+                        variantsByColor[colorId].push(v);
+                    }
+                });
+                
+                Object.keys(variantsByColor).forEach(colorId => {
+                    const colorInfo = colorOption.values.find(v => v.id == colorId);
+                    if (colorInfo?.title && colorInfo?.colors) {
+                        const swatch = document.createElement('div');
+                        swatch.className = 'swatch';
+                        swatch.dataset.colorId = colorId;
+                        swatch.title = colorInfo.title;
+                        swatch.style.backgroundColor = colorInfo.colors[0];
+                        colorSwatchesContainer.appendChild(swatch);
+                    }
+                });
+
+                const updatePrice = () => {
+                    const selectedVariant = enabledVariants.find(v => v.id == variantSelect.value);
+                    if (selectedVariant?.price) priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
+                };
+
+                const updateSizeOptions = (colorId) => {
+                    const variantsForColor = variantsByColor[colorId] || [];
+                    variantSelect.innerHTML = '';
+                    variantsForColor.forEach(v => {
+                        const sizeId = v.options.find(o => o.option_id === sizeOption.id)?.value_id;
+                        const sizeInfo = sizeOption.values.find(val => val.id === sizeId);
+                        if (sizeInfo?.title) {
+                            const option = document.createElement('option');
+                            option.value = v.id;
+                            option.textContent = sizeInfo.title;
+                            variantSelect.appendChild(option);
+                        }
+                    });
+                    updatePrice();
+                };
+
+                colorSwatchesContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('swatch')) {
+                        const colorId = e.target.dataset.colorId;
+                        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+                        e.target.classList.add('active');
+                        
+                        const firstVariantOfColor = variantsByColor[colorId]?.[0];
+                        if (firstVariantOfColor) {
+                            const imageForColor = images.find(img => img.variant_ids.includes(firstVariantOfColor.id));
+                            if(imageForColor?.src) mainImage.src = imageForColor.src;
+                        }
+                        updateSizeOptions(colorId);
+                    }
+                });
+                
+                variantSelect.addEventListener('change', updatePrice);
+                
+                const firstColorId = Object.keys(variantsByColor)[0];
+                if (firstColorId && colorSwatchesContainer.querySelector('.swatch')) {
+                    colorSwatchesContainer.querySelector('.swatch').classList.add('active');
+                    updateSizeOptions(firstColorId);
+                }
+            } else {
+                enabledVariants.forEach(variant => {
+                    const option = document.createElement('option');
+                    option.value = variant.id;
+                    option.textContent = variant.title || `Option ${variant.id}`;
+                    variantSelect.appendChild(option);
+                });
+                
+                const updateSimpleProduct = () => {
+                    const selectedVariant = enabledVariants.find(v => v.id == variantSelect.value);
+                    if (selectedVariant) {
+                        priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
+                        const newImage = images.find(img => img.variant_ids.includes(selectedVariant.id));
+                        if(newImage?.src) mainImage.src = newImage.src;
+                    }
+                };
+                
+                variantSelect.addEventListener('change', updateSimpleProduct);
+                if (enabledVariants.length > 0) updateSimpleProduct();
+            }
+        }
+        
+        function initializePlexusBackground() { /* ... full plexus code ... */ }
     </script>
 </body>
 </html>
