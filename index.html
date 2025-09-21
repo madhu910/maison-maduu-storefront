@@ -3,134 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maison Maduu & Co. // Style Synthesized</title>
+    <title>Maison Maduu & Co.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #000000;
-            --text-primary: #FFFFFF;
-            --text-secondary: #a1a1a6;
-            --accent-color: #2563eb;
-            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        }
-        *, *::before, *::after { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { font-family: var(--font-main); background-color: var(--bg-color); color: var(--text-primary); margin: 0; -webkit-font-smoothing: antialiased; }
-        
-        .scroll-section {
-            padding: 10vh 2rem;
-            min-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        
-        .hero { min-height: 100vh; }
-        .hero h1 { font-size: clamp(3.5rem, 10vw, 7rem); font-weight: 800; line-height: 1; margin: 0; }
-        .hero p { font-size: clamp(1rem, 4vw, 1.5rem); color: var(--text-secondary); max-width: 600px; margin: 2rem 0 0 0; }
-
-        .section-headline { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 700; max-width: 800px; margin-bottom: 4rem; }
-
-        /* --- Scroll Animation --- */
-        .scroll-animate {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: opacity 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
-        .scroll-animate.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Category Grid */
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            width: 100%;
-            max-width: 1400px;
-        }
-        .category-card {
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; }
+        .split-container { display: flex; width: 100%; height: 100%; }
+        .split {
+            width: 50%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            background-size: cover; background-position: center;
+            transition: width 0.8s cubic-bezier(0.86, 0, 0.07, 1);
             position: relative;
             text-decoration: none;
-            color: var(--text-primary);
-            aspect-ratio: 4/5;
-            border-radius: 24px;
-            overflow: hidden;
-            display: flex;
-            align-items: flex-end;
-            padding: 2rem;
-            transition: transform 0.4s ease;
         }
-        .category-card:hover { transform: scale(1.03); }
-        .category-card img {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; object-fit: cover;
-            z-index: -1;
-            transition: transform 0.6s ease;
+        .split::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            transition: background 0.5s ease;
         }
-        .category-card:hover img { transform: scale(1.1); }
-        .category-card::after {
-            content: '';
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 50%);
+        .split-container:hover .split:not(:hover) { width: 40%; }
+        .split:hover { width: 60%; }
+        .split:hover::before { background: rgba(0,0,0,0.3); }
+        .men { background-image: url('https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'); }
+        .women { background-image: url('https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'); }
+        .content {
+            position: relative; z-index: 2; color: white; text-align: center;
+            border: 2px solid white; padding: 2rem 4rem;
+            backdrop-filter: blur(5px);
+            transition: transform 0.5s ease;
         }
-        .category-card h3 {
-            font-size: 2rem;
-            font-weight: 700;
-            z-index: 2;
-        }
+        .split:hover .content { transform: scale(1.05); }
+        .content h2 { font-size: 3rem; margin: 0; font-weight: 700; }
     </style>
 </head>
 <body>
-    <section class="scroll-section hero">
-        <h1 class="scroll-animate">The Art of Expression.</h1>
-        <p class="scroll-animate" style="transition-delay: 0.2s;">Apparel is more than fabric. It's a statement. A piece of art. A part of you. Discover yours.</p>
-    </section>
-
-    <section class="scroll-section">
-        <h2 class="scroll-animate section-headline">Curated by design. Printed on demand.</h2>
-        <div class="category-grid">
-            <a href="shop.html?category=T-shirts" class="category-card scroll-animate" style="transition-delay: 0.1s;">
-                <img src="https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="T-Shirts">
-                <h3>T-Shirts</h3>
-            </a>
-            <a href="shop.html?category=Sweatshirts" class="category-card scroll-animate" style="transition-delay: 0.2s;">
-                <img src="https://images.pexels.com/photos/769772/pexels-photo-769772.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Hoodies & Sweatshirts">
-                <h3>Sweatshirts</h3>
-            </a>
-            <a href="shop.html?category=Mugs" class="category-card scroll-animate" style="transition-delay: 0.3s;">
-                <img src="https://images.pexels.com/photos/1684151/pexels-photo-1684151.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Mugs">
-                <h3>Mugs</h3>
-            </a>
-             <a href="shop.html" class="category-card scroll-animate" style="transition-delay: 0.4s;">
-                <img src="https://images.pexels.com/photos/322207/pexels-photo-322207.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="All Products">
-                <h3>All Products</h3>
-            </a>
-        </div>
-    </section>
-    
+    <div class="split-container">
+        <a href="shop.html" class="split men" onclick="setGenderTheme('men')">
+            <div class="content">
+                <h2>Shop Men's</h2>
+            </div>
+        </a>
+        <a href="shop.html" class="split women" onclick="setGenderTheme('women')">
+            <div class="content">
+                <h2>Shop Women's</h2>
+            </div>
+        </a>
+    </div>
     <script>
-        const scrollElements = document.querySelectorAll(".scroll-animate");
-        const elementInView = (el, dividend = 1) => {
-            const elementTop = el.getBoundingClientRect().top;
-            return (elementTop <= (window.innerHeight || document.documentElement.clientHeight) / dividend);
-        };
-        const displayScrollElement = (el) => el.classList.add("is-visible");
-        const hideScrollElement = (el) => el.classList.remove("is-visible");
-        const handleScrollAnimation = () => {
-            scrollElements.forEach((el) => {
-                if (elementInView(el, 1.25)) { displayScrollElement(el); } 
-                else { hideScrollElement(el); }
-            })
+        function setGenderTheme(gender) {
+            localStorage.setItem('shopGender', gender);
         }
-        window.addEventListener("scroll", handleScrollAnimation);
-        handleScrollAnimation();
     </script>
 </body>
 </html>
