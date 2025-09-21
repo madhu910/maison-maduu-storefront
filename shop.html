@@ -8,40 +8,33 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            /* Default Theme (Men's) */
-            --bg-color: #000000;
-            --text-primary: #FFFFFF;
-            --text-secondary: #a1a1a6;
-            --card-bg: #1c1c1e;
-            --border-color: #3a3a3c;
-            --accent-color: #FFFFFF;
+        :root { /* Default Theme (Men's) */
+            --bg-color: #000000; --text-primary: #FFFFFF; --text-secondary: #a1a1a6;
+            --card-bg: #1c1c1e; --border-color: #3a3a3c; --accent-color: #FFFFFF;
         }
-        body.theme-women {
-            /* Women's Theme */
-            --bg-color: #F5F5F4;
-            --text-primary: #1C1C1E;
-            --text-secondary: #8A8A8E;
-            --card-bg: #FFFFFF;
-            --border-color: #EAEAEA;
-            --accent-color: #B2844E;
+        body.theme-women { /* Women's Theme */
+            --bg-color: #F5F5F4; --text-primary: #1C1C1E; --text-secondary: #8A8A8E;
+            --card-bg: #FFFFFF; --border-color: #EAEAEA; --accent-color: #B2844E;
         }
         *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; transition: background-color 0.5s ease, color 0.5s ease; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; transition: all 0.5s ease; }
         .container { max-width: 1440px; margin: 0 auto; padding: 0 2rem; }
-        .main-header { padding: 1.5rem 0; border-bottom: 1px solid var(--border-color); text-align: center; background: var(--bg-color); }
+        .main-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); text-align: center; background: var(--bg-color); position: sticky; top: 0; z-index: 50; }
         .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
-        .shop-header { padding: 4rem 0 2rem 0; text-align: center; }
-        .shop-header h1 { font-size: 3.5rem; font-weight: 700; margin: 0; }
-        .category-section { margin-bottom: 5rem; }
-        .category-title { font-size: 2.5rem; font-weight: 700; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem; }
-        .card { text-decoration: none; color: var(--text-primary); text-align: center; transition: transform 0.3s ease; }
-        .card:hover { transform: translateY(-8px); }
-        .card .image-wrapper { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; }
-        .card img { width: 100%; height: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        .card h3 { font-size: 1.2rem; font-weight: 600; margin: 0.5rem 0; }
-        .card p { font-size: 1.1rem; color: var(--text-secondary); margin: 0; }
+        .shop-layout { display: grid; grid-template-columns: 240px 1fr; gap: 3rem; align-items: flex-start; padding: 4rem 0; }
+        .sidebar { position: sticky; top: 100px; }
+        .sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav .group-title { font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin: 2rem 0 1rem 0; }
+        .sidebar-nav a { display: block; text-decoration: none; color: var(--text-primary); padding: 0.6rem 0; font-size: 1.1rem; transition: color 0.2s ease; }
+        .sidebar-nav a:hover { color: var(--accent-color); }
+        .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+        .card { text-decoration: none; color: var(--text-primary); text-align: center; }
+        .card .image-wrapper { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; transition: transform 0.3s ease; }
+        .card:hover .image-wrapper { transform: translateY(-5px); }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
+        .card p { font-size: 1rem; color: var(--text-secondary); margin: 0; }
     </style>
 </head>
 <body>
@@ -49,96 +42,126 @@
         <a href="index.html" class="nav-brand">Maison Maduu & Co.</a>
     </header>
     <div class="container">
-        <main id="shop-main">
-             <div class="shop-header">
-                <h1 id="shop-title">Loading Collection...</h1>
-            </div>
+        <div class="shop-layout">
+            <aside class="sidebar">
+                <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            </aside>
+            <main id="shop-main">
+                <div class="product-grid" id="product-grid"><p>Loading Collection...</p></div>
             </main>
+        </div>
     </div>
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
+        let allProducts = [];
+        let gender = 'men';
 
-        // --- THE "BRAIN" OF THE SMART CATEGORIZATION ---
-        const CATEGORY_MAP = {
-            'T-shirt': 'T-Shirts',
-            'Sweatshirt': 'Sweatshirts',
-            'Hoodie': 'Hoodies & Sweatshirts',
-            'Beanie': 'Hats & Beanies',
-            'Hat': 'Hats & Beanies',
-            'Mug': 'Drinkware',
-            'Bottle': 'Drinkware',
-            'Poster': 'Home & Wall Art',
-            'Phone Case': 'Accessories',
+        const CATEGORIES = {
+            men: {
+                "All Men's Clothing": [],
+                "Shirts": ["T-shirt", "Polo", "Tank Top", "Long Sleeve"],
+                "Outerwear": ["Hoodie", "Sweatshirt", "Jacket", "Knitwear"],
+                "Bottoms": ["Sweatpants", "Jogger", "Short", "Pant", "Legging"]
+            },
+            women: {
+                "All Women's Clothing": [],
+                "Tops": ["T-shirt", "Polo", "Tank Top", "Crop Top", "Long Sleeve"],
+                "Outerwear": ["Hoodie", "Sweatshirt", "Jacket"],
+                "Dresses & Skirts": ["Dress", "Skirt"],
+                "Bottoms": ["Sweatpants", "Jogger", "Legging", "Short", "Pant"],
+                "Activewear": ["Sports Bra", "Swimwear"]
+            }
         };
 
-        function getCategoryForProduct(title) {
-            for (const keyword in CATEGORY_MAP) {
-                if (title.toLowerCase().includes(keyword.toLowerCase())) {
-                    return CATEGORY_MAP[keyword];
+        function getCategoryForProduct(title, genderCategories) {
+            const titleLower = title.toLowerCase();
+            for (const group in genderCategories) {
+                for (const keyword of genderCategories[group]) {
+                    if (titleLower.includes(keyword.toLowerCase())) {
+                        return { group, keyword };
+                    }
                 }
             }
-            return 'Miscellaneous'; // Fallback category
+            return { group: 'Other', keyword: 'Other' };
+        }
+
+        function populateSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            const genderCategories = CATEGORIES[gender];
+            let navHTML = '<ul>';
+            for (const group in genderCategories) {
+                if (group.startsWith("All")) {
+                     navHTML += `<li><a href="#" class="category-link active" data-category="all">${group}</a></li>`;
+                } else {
+                    navHTML += `<li class="group-title">${group}</li>`;
+                    genderCategories[group].forEach(keyword => {
+                        navHTML += `<li><a href="#" class="category-link" data-category="${keyword}">${keyword}s</a></li>`;
+                    });
+                }
+            }
+            navHTML += '</ul>';
+            nav.innerHTML = navHTML;
+
+            nav.addEventListener('click', e => {
+                e.preventDefault();
+                if (e.target.classList.contains('category-link')) {
+                    document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
+                    e.target.classList.add('active');
+                    filterAndRenderProducts();
+                }
+            });
+        }
+
+        function filterAndRenderProducts() {
+            const activeCategory = document.querySelector('.category-link.active').dataset.category;
+            const genderFiltered = allProducts.filter(p => {
+                const title = p.name.toLowerCase();
+                return title.includes(gender) || title.includes("unisex");
+            });
+
+            let categoryFiltered = [];
+            if (activeCategory === 'all') {
+                categoryFiltered = genderFiltered;
+            } else {
+                categoryFiltered = genderFiltered.filter(p => p.name.toLowerCase().includes(activeCategory.toLowerCase()));
+            }
+            renderGrid(categoryFiltered);
+        }
+
+        function renderGrid(products) {
+            const productGrid = document.getElementById("product-grid");
+            productGrid.innerHTML = "";
+            if (products.length === 0) {
+                productGrid.innerHTML = `<p>No products found in this category.</p>`;
+                return;
+            }
+            products.forEach(product => {
+                const cardLink = document.createElement("a");
+                cardLink.className = "card";
+                cardLink.href = `product.html?id=${product.id}`;
+                cardLink.innerHTML = `
+                    <div class="image-wrapper">
+                        <img src="${product.thumbnail_url}" alt="${product.name}">
+                    </div>
+                    <h3>${product.name}</h3>
+                    <p>${product.variants} Variants</p>
+                `;
+                productGrid.appendChild(cardLink);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            const gender = localStorage.getItem('shopGender') || 'men';
+            gender = localStorage.getItem('shopSelection') || 'men';
             document.body.className = `theme-${gender}`;
-            document.getElementById('shop-title').textContent = `${gender === 'men' ? 'Men' : 'Women'}'s Collection`;
-
-            const mainContainer = document.getElementById('shop-main');
             
+            populateSidebar();
+
             try {
                 const response = await fetch(`${API_BASE_URL}/api/products`);
-                const allProducts = await response.json();
-
-                // Filter products based on gender selection
-                const genderFilteredProducts = allProducts.filter(p => {
-                    const titleLower = p.name.toLowerCase();
-                    if (gender === 'men') {
-                        // Show "Men's" and "Unisex" products
-                        return titleLower.includes("men") || titleLower.includes("unisex");
-                    } else {
-                        // Show "Women's" and "Unisex" products
-                        return titleLower.includes("women") || titleLower.includes("unisex");
-                    }
-                });
-
-                // Group the filtered products by smart category
-                const productsByCategory = {};
-                genderFilteredProducts.forEach(product => {
-                    const category = getCategoryForProduct(product.name);
-                    if (!productsByCategory[category]) {
-                        productsByCategory[category] = [];
-                    }
-                    productsByCategory[category].push(product);
-                });
-
-                // Dynamically build the page
-                for (const category in productsByCategory) {
-                    const section = document.createElement('section');
-                    section.className = 'category-section';
-
-                    let productsHTML = '';
-                    productsByCategory[category].forEach(product => {
-                        productsHTML += `
-                            <a href="product.html?id=${product.id}" class="card">
-                                <div class="image-wrapper">
-                                    <img src="${product.thumbnail_url}" alt="${product.name}">
-                                </div>
-                                <h3>${product.name}</h3>
-                                <p>${product.variants} Variants</p>
-                            </a>`;
-                    });
-
-                    section.innerHTML = `
-                        <h2 class="category-title">${category}</h2>
-                        <div class="product-grid">${productsHTML}</div>
-                    `;
-                    mainContainer.appendChild(section);
-                }
-
+                allProducts = await response.json();
+                filterAndRenderProducts();
             } catch (e) {
-                mainContainer.innerHTML += `<p>Failed to load products.</p>`;
+                document.getElementById("product-grid").innerHTML = `<p>Failed to load products.</p>`;
             }
         });
     </script>
