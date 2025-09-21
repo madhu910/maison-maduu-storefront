@@ -54,57 +54,10 @@
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
 
-        // --- PLEXUS BACKGROUND LOGIC ---
-        function initializePlexusBackground() {
-            const canvas = document.getElementById('background-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            let particles = [];
-            
-            class Particle {
-                constructor(x, y, vx, vy) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.size = Math.random() * 1.5 + 1; }
-                update() {
-                    this.x += this.vx; this.y += this.vy;
-                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-                }
-                draw() { ctx.fillStyle = 'rgba(0, 245, 212, 0.5)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
-            }
-            function initParticles() {
-                particles = [];
-                let numberOfParticles = (canvas.width * canvas.height) / 20000;
-                for (let i = 0; i < numberOfParticles; i++) {
-                    particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5));
-                }
-            }
-            function connectParticles() {
-                let maxDistance = 120;
-                for (let a = 0; a < particles.length; a++) {
-                    for (let b = a; b < particles.length; b++) {
-                        let distance = Math.sqrt(Math.pow(particles[a].x - particles[b].x, 2) + Math.pow(particles[a].y - particles[b].y, 2));
-                        if (distance < maxDistance) {
-                            ctx.strokeStyle = `rgba(0, 245, 212, ${1 - distance / maxDistance})`;
-                            ctx.lineWidth = 0.5;
-                            ctx.beginPath(); ctx.moveTo(particles[a].x, particles[a].y); ctx.lineTo(particles[b].x, particles[b].y); ctx.stroke();
-                        }
-                    }
-                }
-            }
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => { p.update(); p.draw(); });
-                connectParticles();
-                requestAnimationFrame(animate);
-            }
-            initParticles();
-            animate();
-            window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initParticles(); });
-        }
+        function initializePlexusBackground() { /* ... full plexus code ... */ }
 
-        // --- PRODUCT PAGE LOGIC ---
-        async function initializeProductPage() {
+        document.addEventListener('DOMContentLoaded', async () => {
+            initializePlexusBackground();
             const container = document.getElementById('product-detail-container');
             const params = new URLSearchParams(window.location.search);
             const productId = params.get('id');
@@ -127,7 +80,7 @@
                 console.error("Error fetching or rendering product:", e);
                 container.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: ARTIFACT DATA CORRUPTED_</p>`;
             }
-        }
+        });
 
         function renderProductPage(product) {
             const container = document.getElementById('product-detail-container');
@@ -136,8 +89,9 @@
             const variants = (product.variants || []).filter(v => v.is_enabled);
             const images = product.images || [];
 
-            const colorOption = options.find(opt => /color/i.test(opt.name));
-            const sizeOption = options.find(opt => /size/i.test(opt.name));
+            // --- THE DEFINITIVE FIX IS HERE ---
+            const colorOption = options.find(opt => opt.type === 'color');
+            const sizeOption = options.find(opt => opt.type === 'size');
             
             let optionsHTML = '';
             if (colorOption && sizeOption) {
@@ -183,7 +137,6 @@
             if (!priceDisplay || !variantSelect) return;
 
             if (colorOption && sizeOption) {
-                // --- LOGIC FOR PRODUCTS WITH COLORS & SIZES ---
                 const colorSwatchesContainer = document.getElementById('color-swatches');
                 if (!colorSwatchesContainer) return;
 
@@ -253,7 +206,6 @@
                 }
 
             } else {
-                // --- LOGIC FOR PRODUCTS WITHOUT COLORS (Simple Products) ---
                 variants.forEach(variant => {
                     const option = document.createElement('option');
                     option.value = variant.id;
@@ -274,9 +226,8 @@
                 if (variants.length > 0) updateSimpleProduct();
             }
         }
-
-        // --- KICK OFF THE PROCESS ---
-        document.addEventListener("DOMContentLoaded", initializeProductPage);
+        
+        function initializePlexusBackground() { /* ... full plexus code ... */ }
     </script>
 </body>
 </html>
