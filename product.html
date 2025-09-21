@@ -85,9 +85,13 @@
         function renderProductPage(product) {
             const container = document.getElementById('product-detail-container');
             
+            const options = product.options || [];
+            const variants = product.variants || [];
+            const images = product.images || [];
+
             // --- THE CRITICAL FIX IS HERE ---
-            const colorOption = product.options.find(opt => opt.name === 'Colors' || opt.name === 'Colour');
-            const sizeOption = product.options.find(opt => opt.name === 'Sizes');
+            const colorOption = options.find(opt => opt.name === 'Colors' || opt.name === 'Colour');
+            const sizeOption = options.find(opt => opt.name === 'Sizes' || opt.name === 'Size');
             
             let optionsHTML = '';
             
@@ -101,7 +105,7 @@
                         <label>SIZE:</label>
                         <select id="variant-select"></select>
                     </div>`;
-            } else if (product.variants && product.variants.length > 0) {
+            } else if (variants.length > 0) {
                 optionsHTML = `
                     <div class="option-group variant-selector">
                         <label>OPTIONS:</label>
@@ -109,15 +113,20 @@
                     </div>`;
             }
 
+            const mainImageSrc = images[0]?.src || '';
+            const description = product.description?.replace(/\\r\\n/g, '<br>') || 'No description available.';
+            const title = product.title || 'Untitled Artifact';
+            const initialPrice = variants[0]?.price ? `$${(variants[0].price / 100).toFixed(2)}` : 'N/A';
+
             container.innerHTML = `
                 <main class="product-detail-grid">
                     <div class="product-image-gallery">
-                        <div class="main-image"><img src="${product.images[0]?.src || ''}" alt="${product.title || ''}" id="main-product-image"></div>
+                        <div class="main-image"><img src="${mainImageSrc}" alt="${title}" id="main-product-image"></div>
                     </div>
                     <div class="product-info">
-                        <h1>${product.title || 'Untitled Artifact'}</h1>
-                        <div class="price" id="variant-price"></div>
-                        <p class="description">${product.description?.replace(/\\r\\n/g, '<br>') || 'No description available.'}</p>
+                        <h1>${title}</h1>
+                        <div class="price" id="variant-price">${initialPrice}</div>
+                        <p class="description">${description}</p>
                         ${optionsHTML}
                         <button class="buy-now">Acquire</button>
                     </div>
@@ -138,7 +147,7 @@
             
             // Use the same robust check here
             const colorOption = options.find(opt => opt.name === 'Colors' || opt.name === 'Colour');
-            const sizeOption = options.find(opt => opt.name === 'Sizes');
+            const sizeOption = options.find(opt => opt.name === 'Sizes' || opt.name === 'Size');
 
             if (colorOption && sizeOption) {
                 const colorSwatchesContainer = document.getElementById('color-swatches');
