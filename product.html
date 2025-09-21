@@ -3,116 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product // Maison Maduu & Co.</title>
+    <title>The Collection // Maison Maduu & Co.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
     <style>
         :root {
             --bg-color: #ffffff; --text-primary: #1d1d1f; --text-secondary: #6e6e73;
-            --accent-color: #0071e3; --border-color: #d2d2d7; --pill-bg: #f5f5f7;
+            --accent-color: #0071e3; --border-color: #d2d2d7;
             --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
         *, *::before, *::after { box-sizing: border-box; }
         body { font-family: var(--font-main); background-color: var(--bg-color); color: var(--text-primary); margin: 0; -webkit-font-smoothing: antialiased; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+        .container { max-width: 1440px; margin: 0 auto; padding: 0 2rem; }
         .main-header { padding: 1.5rem 0; border-bottom: 1px solid var(--border-color); text-align: center; }
         .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
-        .product-page { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 4rem; padding: 6rem 0; }
-        .product-gallery .main-image { margin-bottom: 1rem; }
-        .product-gallery .main-image img { width: 100%; border-radius: 18px; background-color: var(--pill-bg); }
-        .thumbnail-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
-        .thumbnail { border-radius: 12px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s ease; }
-        .thumbnail img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .thumbnail.active { border-color: var(--accent-color); }
-        .product-info h1 { font-size: 2.5rem; font-weight: 700; margin: 0 0 1rem 0; }
-        .product-info .price { font-size: 1.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 2rem; }
-        .option-group { margin-bottom: 2rem; }
-        .option-group label { font-weight: 600; display: block; margin-bottom: 1rem; }
-        .pill-container { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-        .pill { padding: 0.75rem 1.5rem; border: 1px solid var(--border-color); border-radius: 50px; cursor: pointer; transition: all 0.2s ease; }
-        .pill.active { border-color: var(--accent-color); color: var(--accent-color); box-shadow: 0 0 0 1px var(--accent-color); }
-        .buy-now { width: 100%; background-color: var(--accent-color); color: white; font-size: 1.2rem; font-weight: 600; padding: 1.2rem; border-radius: 12px; border: none; cursor: pointer; transition: background-color 0.2s ease; }
-        .buy-now:hover { background-color: #0077ed; }
-        [v-cloak] { display: none; }
+        
+        /* --- NEW LAYOUT --- */
+        .shop-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 4rem;
+            align-items: flex-start;
+            padding: 4rem 0;
+        }
+        .sidebar {
+            position: sticky;
+            top: 2rem;
+        }
+        .sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav .group-title {
+            font-size: 0.9rem; font-weight: 600;
+            color: var(--text-secondary); text-transform: uppercase;
+            letter-spacing: 0.5px; margin: 2rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sidebar-nav .group-title:first-child { margin-top: 0; }
+        .sidebar-nav a {
+            display: block; text-decoration: none; color: var(--text-primary);
+            padding: 0.6rem 0; font-size: 1.1rem;
+            transition: color 0.2s ease;
+        }
+        .sidebar-nav a:hover { color: var(--accent-color); }
+        .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem;
+        }
+        .card { text-decoration: none; color: var(--text-primary); text-align: center; transition: transform 0.3s ease, box-shadow 0.3s ease; opacity: 0; animation: fadeIn 0.5s ease-out forwards; }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 10px B30px rgba(0,0,0,0.08); }
+        .card .image-wrapper { background-color: #f5f5f7; border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; border: 1px solid var(--border-color); }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card h3 { font-size: 1.2rem; font-weight: 600; margin: 0.5rem 0; }
+        .card p { font-size: 1.1rem; color: var(--text-secondary); margin: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
     <header class="main-header">
         <a href="index.html" class="nav-brand">Maison Maduu & Co.</a>
     </header>
-    <div id="app" class="container" v-cloak>
-        <main v-if="product" class="product-page">
-            <div class="product-gallery">
-                <div class="main-image">
-                    <img :src="mainImage" :alt="product.sync_product.name">
-                </div>
-                <div class="thumbnail-grid">
-                    <div class="thumbnail" v-for="image in uniqueMockups" :key="image.url" @click="mainImage = image.url" :class="{ active: image.url === mainImage }">
-                        <img :src="image.url" alt="Product Thumbnail">
-                    </div>
-                </div>
-            </div>
-            <div class="product-info">
-                <h1>{{ product.sync_product.name }}</h1>
-                <p class="price">{{ formattedPrice }}</p>
-                <div class="option-group">
-                    <label>Size</label>
-                    <div class="pill-container">
-                         <div v-for="size in sizes" :key="size" class="pill" :class="{ active: size === selectedSize }" @click="selectedSize = size">
-                              {{ size }}
-                         </div>
-                    </div>
-                </div>
-                <button class="buy-now">Acquire</button>
-            </div>
-        </main>
+    <div class="container">
+        <div class="shop-layout">
+            <aside class="sidebar">
+                <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            </aside>
+            <main id="shop-main">
+                <div class="product-grid" id="product-grid"><p>Loading Products...</p></div>
+            </main>
+        </div>
     </div>
+
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
-        new Vue({
-            el: '#app',
-            data: {
-                product: null,
-                selectedSize: null,
-                mainImage: ''
-            },
-            computed: {
-                uniqueMockups() {
-                    if (!this.product) return [];
-                    const mockups = this.product.sync_variants
-                        .flatMap(variant => variant.files.filter(file => file.type === 'preview'))
-                        .map(file => ({ url: file.url }));
-                    return [...new Map(mockups.map(item => [item.url, item])).values()];
-                },
-                sizes() {
-                    if (!this.product) return [];
-                    const allSizes = this.product.sync_variants.map(v => v.size);
-                    return [...new Set(allSizes)];
-                },
-                selectedVariant() {
-                    if (!this.product || !this.selectedSize) return this.product?.sync_variants[0];
-                    return this.product.sync_variants.find(v => v.size === this.selectedSize);
-                },
-                formattedPrice() {
-                    return this.selectedVariant ? `$${this.selectedVariant.retail_price}` : 'Select an option';
+        let allProducts = [];
+
+        // Define the categories and the tags they correspond to in Printful
+        const CATEGORIES = {
+            "All Apparel": ["T-shirts", "Polo shirts", "Tank tops", "Hoodies", "Sweatshirts", "Jackets", "Dresses", "Skirts", "Leggings"],
+            "Accessories": ["Hats", "Beanies", "Phone Cases"],
+            "Home & Living": ["Mugs", "Posters", "Bottles"]
+        };
+
+        function getCategoryForProduct(productTags) {
+            for (const group in CATEGORIES) {
+                for (const keyword of CATEGORIES[group]) {
+                    if (productTags.includes(keyword)) {
+                        return group;
+                    }
                 }
-            },
-            methods: {
-                async fetchProduct(productId) {
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
-                        const data = await response.json();
-                        this.product = data;
-                        this.mainImage = this.uniqueMockups[0]?.url;
-                        this.selectedSize = this.sizes[0];
-                    } catch (e) { console.error("Failed to load product", e); }
+            }
+            return 'Other';
+        }
+
+        function populateSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            let navHTML = '<ul>';
+            navHTML += `<li><a href="#" class="category-link active" data-category="all">All Products</a></li>`;
+
+            for (const group in CATEGORIES) {
+                navHTML += `<li class="group-title">${group}</li>`;
+                CATEGORIES[group].forEach(keyword => {
+                    navHTML += `<li><a href="#" class="category-link" data-category="${keyword}">${keyword}</a></li>`;
+                });
+            }
+            navHTML += '</ul>';
+            nav.innerHTML = navHTML;
+
+            nav.addEventListener('click', e => {
+                e.preventDefault();
+                if (e.target.classList.contains('category-link')) {
+                    document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
+                    e.target.classList.add('active');
+                    filterAndRenderProducts();
                 }
-            },
-            created() {
-                const params = new URLSearchParams(window.location.search);
-                this.fetchProduct(params.get('id'));
+            });
+        }
+
+        function filterAndRenderProducts() {
+            const activeCategory = document.querySelector('.category-link.active').dataset.category;
+            let filteredProducts = [];
+
+            if (activeCategory === 'all') {
+                filteredProducts = allProducts;
+            } else if (CATEGORIES[activeCategory]) { // Check if it's a main category group
+                filteredProducts = allProducts.filter(p => (p.tags || []).some(tag => CATEGORIES[activeCategory].includes(tag)));
+            } else { // It's a subcategory
+                filteredProducts = allProducts.filter(p => (p.tags || []).includes(activeCategory));
+            }
+            
+            renderGrid(filteredProducts);
+        }
+
+        function renderGrid(products) {
+            const productGrid = document.getElementById("product-grid");
+            productGrid.innerHTML = "";
+            if (products.length === 0) {
+                productGrid.innerHTML = `<p>No products found in this category.</p>`;
+                return;
+            }
+            products.forEach((product, index) => {
+                const cardLink = document.createElement("a");
+                cardLink.className = "card";
+                cardLink.href = `product.html?id=${product.id}`;
+                cardLink.style.animationDelay = `${index * 50}ms`;
+                cardLink.innerHTML = `
+                    <div class="image-wrapper">
+                        <img src="${product.thumbnail_url}" alt="${product.name}">
+                    </div>
+                    <h3>${product.name}</h3>
+                    <p>${product.variants} Variants</p>
+                `;
+                productGrid.appendChild(cardLink);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            populateSidebar();
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products`);
+                allProducts = await response.json();
+                filterAndRenderProducts();
+            } catch (e) {
+                document.getElementById("product-grid").innerHTML = `<p>Failed to load products.</p>`;
             }
         });
     </script>
