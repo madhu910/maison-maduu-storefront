@@ -3,47 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debugging Product...</title>
+    <title>Maison Maduu & Co. // A.D. 3000</title>
+    <meta name="description" content="Acquire limited-run physical artifacts. Minted on demand and dispatched to your designated coordinates via the Chronos network.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bruno+Ace+SC&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #111; font-family: monospace; color: #eee; padding: 2rem; font-size: 1.2rem; }
-        h1 { color: #00F5D4; }
+        :root {
+            --bg-color: #000000; --text-primary: #EDEDFF; --text-secondary: #8886A4;
+            --accent-color: #00F5D4; --font-body: 'Space Mono', monospace;
+            --font-heading: 'Bruno Ace SC', cursive;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: var(--font-body); background-color: var(--bg-color); color: var(--text-primary); margin: 0; overflow: hidden; }
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .hero-content { 
+            position: relative; z-index: 2; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; height: 100vh; text-align: center;
+            padding: 1rem;
+        }
+        .hero-content h1 {
+            font-family: var(--font-heading); font-size: clamp(3rem, 10vw, 7rem);
+            line-height: 1; margin: 0 0 1.5rem 0; text-shadow: 0 0 15px var(--accent-color);
+            animation: fadeIn 2s ease-out;
+        }
+        .hero-content p {
+            font-size: clamp(1rem, 2.5vw, 1.25rem); color: var(--text-secondary); 
+            max-width: 600px; margin: 0 auto 2.5rem auto; line-height: 1.7;
+            animation: fadeIn 2s 0.5s ease-out backwards;
+        }
+        .cta-button {
+            font-family: var(--font-heading); font-size: 1.2rem;
+            color: var(--bg-color); background: var(--accent-color);
+            padding: 1rem 3rem; border-radius: 5px; text-decoration: none;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 25px var(--accent-color);
+            animation: fadeIn 2s 1s ease-out backwards;
+        }
+        .cta-button:hover { transform: scale(1.05); box-shadow: 0 0 40px var(--accent-color); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <h1>DEBUG MODE ACTIVE</h1>
-    <p>Please open the browser console to see the product data.</p>
-    <p>1. Right-click on this page -> Inspect</p>
-    <p>2. Click the "Console" tab.</p>
+    <canvas id="particle-canvas"></canvas>
+    <div class="hero-content">
+        <h1>STYLE SYNTHESIS</h1>
+        <p>Physical artifacts minted on demand. Your aesthetic, algorithmically evolved.</p>
+        <a href="shop.html" class="cta-button">Enter The Nexus</a>
+    </div>
 
     <script>
-        const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const container = document.querySelector('body');
-            const params = new URLSearchParams(window.location.search);
-            const productId = params.get('id');
+        document.addEventListener("DOMContentLoaded", () => {
+            const canvas = document.getElementById('particle-canvas'); if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let particles = [];
+            const mouse = { x: null, y: null, radius: 150 };
+            window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+            window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initParticles(); });
             
-            if (!productId) {
-                console.error("ERROR: NO PRODUCT ID IN URL.");
-                return;
-            }
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
-                if (!response.ok) {
-                    console.error("NETWORK ERROR:", response.status, response.statusText);
-                    return;
+            class Particle {
+                constructor(x, y, dirX, dirY, size, color) { this.x=x; this.y=y; this.dirX=dirX; this.dirY=dirY; this.size=size; this.color=color; }
+                draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fillStyle = this.color; ctx.fill(); }
+                update() {
+                    if (this.x > canvas.width || this.x < 0) this.dirX = -this.dirX;
+                    if (this.y > canvas.height || this.y < 0) this.dirY = -this.dirY;
+                    let dx = mouse.x - this.x; let dy = mouse.y - this.y;
+                    if (mouse.x && Math.sqrt(dx*dx + dy*dy) < mouse.radius) { this.x -= dx / 15; this.y -= dy / 15; }
+                    this.x += this.dirX; this.y += this.dirY;
+                    this.draw();
                 }
-                const product = await response.json();
-                
-                // This is the only important line
-                console.log("--- REAL PRODUCT DATA ---", product);
-
-                container.innerHTML += `<p style="color: #0f0;">SUCCESS! Data has been logged to the console. Please copy it.</p>`;
-
-            } catch (e) {
-                console.error("CRITICAL SCRIPT ERROR:", e);
             }
+            function initParticles() {
+                particles = [];
+                let count = (canvas.width * canvas.height) / 9000;
+                for (let i = 0; i < count; i++) {
+                    particles.push(new Particle( Math.random() * canvas.width, Math.random() * canvas.height, (Math.random() * 0.4) - 0.2, (Math.random() * 0.4) - 0.2, Math.random() * 2 + 1, 'rgba(0, 245, 212, 0.5)' ));
+                }
+            }
+            function animateParticles() { requestAnimationFrame(animateParticles); ctx.clearRect(0, 0, canvas.width, canvas.height); for (let p of particles) { p.update(); } }
+            initParticles();
+            animateParticles();
         });
     </script>
 </body>
