@@ -68,6 +68,7 @@
         </main>
     </div>
     <footer><p>&copy; 2025 Maison Maduu & Co. All Timelines Reserved.</p></footer>
+
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
         let allProducts = [];
@@ -78,10 +79,7 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             let particles = [];
-            const mouse = { x: null, y: null };
-            window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
             window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initParticles(); });
-            
             class Particle {
                 constructor(x, y, vx, vy) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.size = Math.random() * 1.5 + 1; }
                 update() {
@@ -102,16 +100,11 @@
                 let maxDistance = 120;
                 for (let a = 0; a < particles.length; a++) {
                     for (let b = a; b < particles.length; b++) {
-                        let dx = particles[a].x - particles[b].x;
-                        let dy = particles[a].y - particles[b].y;
-                        let distance = Math.sqrt(dx * dx + dy * dy);
+                        let distance = Math.sqrt(Math.pow(particles[a].x - particles[b].x, 2) + Math.pow(particles[a].y - particles[b].y, 2));
                         if (distance < maxDistance) {
                             ctx.strokeStyle = `rgba(0, 245, 212, ${1 - distance / maxDistance})`;
                             ctx.lineWidth = 0.5;
-                            ctx.beginPath();
-                            ctx.moveTo(particles[a].x, particles[a].y);
-                            ctx.lineTo(particles[b].x, particles[b].y);
-                            ctx.stroke();
+                            ctx.beginPath(); ctx.moveTo(particles[a].x, particles[a].y); ctx.lineTo(particles[b].x, particles[b].y); ctx.stroke();
                         }
                     }
                 }
@@ -125,18 +118,12 @@
             initParticles();
             animate();
         }
-
+        
         document.addEventListener('DOMContentLoaded', () => {
             initializePlexusBackground();
             initializeShop();
         });
 
-        async function initializeShop() { /* Unchanged */ }
-        function populateFilters() { /* Unchanged */ }
-        function applyFiltersAndSort() { /* Unchanged */ }
-        function renderGrid(products) { /* Unchanged */ }
-        
-        // Full function definitions
         async function initializeShop() {
             const productGrid = document.getElementById("product-grid");
             productGrid.innerHTML = `<p class="message">>> Accessing data stream...</p>`;
@@ -145,44 +132,56 @@
                 allProducts = await response.json();
                 populateFilters();
                 applyFiltersAndSort();
-            } catch (e) { productGrid.innerHTML = `<p class="message" style="color: #ff4757;">>> CONNECTION LOST_</p>`; }
-            document.getElementById('category-filter').addEventListener('change', applyFiltersAndSort);
-            document.getElementById('sort-filter').addEventListener('change', applyFiltersAndSort);
+            } catch (error) {
+                productGrid.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: Failed to fetch artifacts_</p>`;
+            }
         }
+
         function populateFilters() {
-            const categoryFilter = document.getElementById('category-filter');
-            const categories = [...new Set(allProducts.flatMap(p => p.tags))];
-            categories.forEach(cat => { const option = document.createElement('option'); option.value = cat; option.textContent = cat.toUpperCase(); categoryFilter.appendChild(option); });
-        }
-        function applyFiltersAndSort() {
-            const category = document.getElementById('category-filter').value;
-            const sort = document.getElementById('sort-filter').value;
-            let processedProducts = [...allProducts];
-            if (category !== 'all') { processedProducts = processedProducts.filter(p => p.tags.includes(category)); }
-            processedProducts.sort((a, b) => {
-                const priceA = a.variants.length > 0 ? a.variants[0].price : 0;
-                const priceB = b.variants.length > 0 ? b.variants[0].price : 0;
-                if (sort === 'price-asc') return priceA - priceB;
-                if (sort === 'price-desc') return priceB - priceA;
-                return 0;
+            const categoryFilter = document.getElementById("category-filter");
+            // Clear existing options except for the first "ALL"
+            categoryFilter.innerHTML = '<option value="all">ALL</option>';
+            const categories = [...new Set(allProducts.flatMap(p => p.tags || []))];
+            categories.forEach(cat => {
+                const opt = document.createElement("option");
+                opt.value = cat;
+                opt.textContent = cat.toUpperCase();
+                categoryFilter.appendChild(opt);
             });
-            renderGrid(processedProducts);
+            categoryFilter.addEventListener("change", applyFiltersAndSort);
+            document.getElementById("sort-filter").addEventListener("change", applyFiltersAndSort);
         }
+
+        function applyFiltersAndSort() {
+            const category = document.getElementById("category-filter").value;
+            const sort = document.getElementById("sort-filter").value;
+            let filtered = [...allProducts];
+            if (category !== "all") {
+                filtered = filtered.filter(p => (p.tags || []).includes(category));
+            }
+            if (sort === "price-asc") filtered.sort((a, b) => a.variants[0].price - b.variants[0].price);
+            if (sort === "price-desc") filtered.sort((a, b) => b.variants[0].price - a.variants[0].price);
+            renderGrid(filtered);
+        }
+
         function renderGrid(products) {
             const productGrid = document.getElementById("product-grid");
-            productGrid.innerHTML = "";
-            if (products.length === 0) { productGrid.innerHTML = `<p class="message">>> No artifacts match criteria.</p>`; return; }
-            products.forEach((product, index) => {
-                const cardLink = document.createElement("a");
-                cardLink.className = "card";
-                cardLink.href = `product.html?id=${product.id}`;
-                cardLink.style.animationDelay = `${index * 50}ms`;
-                const title = product.title;
-                const imageUrl = product.images[0]?.src || '';
-                const price = product.variants[0] ? `$${(product.variants[0].price / 100).toFixed(2)}` : '$--.--';
-                cardLink.innerHTML = `<div class="image-wrapper"><img src="${imageUrl}" alt="${title}"></div><div class="card-content"><h3>${title}</h3><p class="product-price">${price}</p></div>`;
-                productGrid.appendChild(cardLink);
-            });
+            productGrid.innerHTML = ""; // Clear grid before rendering
+            if (!products.length) {
+                productGrid.innerHTML = `<p class="message">>> No artifacts found_</p>`;
+                return;
+            }
+            productGrid.innerHTML = products.map((p, i) => {
+                const price = (p.variants[0].price / 100).toFixed(2);
+                return `
+                    <a href="product.html?id=${p.id}" class="card" style="animation-delay: ${i * 0.05}s">
+                        <div class="image-wrapper"><img src="${p.images[0]?.src}" alt="${p.title}"></div>
+                        <div class="card-content">
+                            <h3>${p.title}</h3>
+                            <div class="product-price">$${price}</div>
+                        </div>
+                    </a>`;
+            }).join("");
         }
     </script>
 </body>
