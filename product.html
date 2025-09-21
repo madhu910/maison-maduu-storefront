@@ -1,27 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
     <style>
-        :root {
-            /* Default Theme (Men's) */
-            --bg-color: #000000;
-            --text-primary: #FFFFFF;
-            --text-secondary: #a1a1a6;
-            --card-bg: #1c1c1e;
-            --border-color: #3a3a3c;
-            --accent-color: #FFFFFF;
-            --pill-bg: #1c1c1e;
+        :root { /* Default Theme (Men's) */
+            --bg-color: #000000; --text-primary: #FFFFFF; --text-secondary: #a1a1a6;
+            --card-bg: #1c1c1e; --border-color: #3a3a3c; --accent-color: #FFFFFF; --pill-bg: #1c1c1e;
         }
-        body.theme-women {
-            /* Women's Theme */
-            --bg-color: #F5F5F4;
-            --text-primary: #1C1C1E;
-            --text-secondary: #8A8A8E;
-            --card-bg: #FFFFFF;
-            --border-color: #EAEAEA;
-            --accent-color: #B2844E;
-            --pill-bg: #FFFFFF;
+        body.theme-women { /* Women's Theme */
+            --bg-color: #F5F5F4; --text-primary: #1C1C1E; --text-secondary: #8A8A8E;
+            --card-bg: #FFFFFF; --border-color: #EAEAEA; --accent-color: #B2844E; --pill-bg: #FFFFFF;
         }
         /* The rest of the CSS from the last working Apple-style version goes here */
     </style>
@@ -29,10 +16,10 @@
 <body>
     <script>
         // Apply the theme at the very start
-        const gender = localStorage.getItem('shopGender') || 'men';
+        const gender = localStorage.getItem('shopSelection') || 'men';
         document.body.className = `theme-${gender}`;
 
-        // The rest of the Vue.js script is exactly the same as the last working version
+        // The rest of the Vue.js script is exactly the same
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
         new Vue({
             el: '#app',
