@@ -78,71 +78,80 @@
                 
                 document.title = `${product.title} // Maison Maduu & Co.`;
                 
-                // --- START: NEW, ROBUST RENDERING LOGIC ---
+                renderProductPage(product);
 
-                const colorOption = product.options.find(opt => opt.name === 'Colors');
-                const sizeOption = product.options.find(opt => opt.name === 'Sizes');
+            } catch (e) {
+                console.error("Error fetching or rendering product:", e);
+                container.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: ARTIFACT DATA CORRUPTED_</p>`;
+            }
+        });
+
+        function renderProductPage(product) {
+            const container = document.getElementById('product-detail-container');
+            const colorOption = product.options.find(opt => opt.name === 'Colors');
+            const sizeOption = product.options.find(opt => opt.name === 'Sizes');
+            
+            let optionsHTML = '';
+            
+            // Determine which UI to build
+            if (colorOption && sizeOption) {
+                optionsHTML = `
+                    <div class="option-group color-selector">
+                        <label>COLOR:</label>
+                        <div class="color-swatches" id="color-swatches"></div>
+                    </div>
+                    <div class="option-group variant-selector">
+                        <label>SIZE:</label>
+                        <select id="variant-select"></select>
+                    </div>`;
+            } else {
+                optionsHTML = `
+                    <div class="option-group variant-selector">
+                        <label>OPTIONS:</label>
+                        <select id="variant-select"></select>
+                    </div>`;
+            }
+
+            container.innerHTML = `
+                <main class="product-detail-grid">
+                    <div class="product-image-gallery">
+                        <div class="main-image"><img src="${product.images[0].src}" alt="${product.title}" id="main-product-image"></div>
+                        <div class="thumbnail-gallery" id="thumbnail-gallery"></div>
+                    </div>
+                    <div class="product-info">
+                        <h1>${product.title}</h1>
+                        <div class="price" id="variant-price"></div>
+                        <p class="description">${product.description.replace(/\\r\\n/g, '<br>')}</p>
+                        ${optionsHTML}
+                        <button class="buy-now">Acquire</button>
+                    </div>
+                </main>`;
+
+            setupEventListeners(product);
+        }
+
+        function setupEventListeners(product) {
+            const mainImage = document.getElementById('main-product-image');
+            const priceDisplay = document.getElementById('variant-price');
+            const variantSelect = document.getElementById('variant-select');
+            
+            const colorOption = product.options.find(opt => opt.name === 'Colors');
+            const sizeOption = product.options.find(opt => opt.name === 'Sizes');
+
+            if (colorOption && sizeOption) {
+                // --- LOGIC FOR PRODUCTS WITH COLORS & SIZES ---
+                const colorSwatchesContainer = document.getElementById('color-swatches');
                 
-                let optionsHTML = '';
-                // Determine which UI to build based on available options
-                if (colorOption && sizeOption) {
-                    optionsHTML = `
-                        <div class="option-group color-selector">
-                            <label>COLOR:</label>
-                            <div class="color-swatches" id="color-swatches"></div>
-                        </div>
-                        <div class="option-group variant-selector">
-                            <label>SIZE:</label>
-                            <select id="variant-select"></select>
-                        </div>`;
-                } else {
-                    optionsHTML = `
-                        <div class="option-group variant-selector">
-                            <label>OPTIONS:</label>
-                            <select id="variant-select"></select>
-                        </div>`;
-                }
-
-                // Render the main page structure
-                container.innerHTML = `
-                    <main class="product-detail-grid">
-                        <div class="product-image-gallery">
-                            <div class="main-image"><img src="${product.images[0].src}" alt="${product.title}" id="main-product-image"></div>
-                            <div class="thumbnail-gallery" id="thumbnail-gallery"></div>
-                        </div>
-                        <div class="product-info">
-                            <h1>${product.title}</h1>
-                            <div class="price" id="variant-price"></div>
-                            <p class="description">${product.description.replace(/\\r\\n/g, '<br>')}</p>
-                            ${optionsHTML}
-                            <button class="buy-now">Acquire</button>
-                        </div>
-                    </main>`;
-
-                // Get references to all the newly created elements
-                const mainImage = document.getElementById('main-product-image');
-                const priceDisplay = document.getElementById('variant-price');
-                const variantSelect = document.getElementById('variant-select');
-                const thumbnailGallery = document.getElementById('thumbnail-gallery');
+                const variantsByColor = {};
+                product.variants.forEach(v => {
+                    const colorId = v.options.find(o => o.id === colorOption.id).value;
+                    if (!variantsByColor[colorId]) variantsByColor[colorId] = [];
+                    variantsByColor[colorId].push(v);
+                });
                 
-                const updatePrice = () => {
-                    const selectedVariant = product.variants.find(v => v.id == variantSelect.value);
-                    if (selectedVariant) priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
-                };
-
-                // Now, attach the correct logic
-                if (colorOption && sizeOption) {
-                    const colorSwatchesContainer = document.getElementById('color-swatches');
-                    // This is a product with colors and sizes (e.g., T-Shirt)
-                    const variantsByColor = {};
-                    product.variants.forEach(v => {
-                        const colorId = v.options.find(o => o.id === colorOption.id).value;
-                        if (!variantsByColor[colorId]) variantsByColor[colorId] = [];
-                        variantsByColor[colorId].push(v);
-                    });
-                    
-                    for (const colorId in variantsByColor) {
-                        const colorInfo = colorOption.values.find(v => v.id == colorId);
+                for (const colorId in variantsByColor) {
+                    const colorInfo = colorOption.values.find(v => v.id == colorId);
+                    if (colorInfo) { // Safety check
                         const swatch = document.createElement('div');
                         swatch.className = 'swatch';
                         swatch.dataset.colorId = colorId;
@@ -150,63 +159,70 @@
                         swatch.style.backgroundColor = colorInfo.colors[0];
                         colorSwatchesContainer.appendChild(swatch);
                     }
+                }
 
-                    const updateSizeOptions = (colorId) => {
-                        const variants = variantsByColor[colorId];
-                        variantSelect.innerHTML = '';
-                        variants.forEach(v => {
-                            const sizeId = v.options.find(o => o.id === sizeOption.id).value;
-                            const sizeInfo = sizeOption.values.find(val => val.id === sizeId);
+                const updatePrice = () => {
+                    const selectedVariant = product.variants.find(v => v.id == variantSelect.value);
+                    if (selectedVariant) priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
+                };
+
+                const updateSizeOptions = (colorId) => {
+                    const variants = variantsByColor[colorId];
+                    variantSelect.innerHTML = '';
+                    variants.forEach(v => {
+                        const sizeId = v.options.find(o => o.id === sizeOption.id)?.value;
+                        const sizeInfo = sizeOption.values.find(val => val.id === sizeId);
+                        
+                        // THIS IS THE NEW SAFETY CHECK
+                        if (sizeInfo && sizeInfo.title) {
                             const option = document.createElement('option');
                             option.value = v.id;
                             option.textContent = sizeInfo.title;
                             variantSelect.appendChild(option);
-                        });
-                        updatePrice();
-                    };
-
-                    colorSwatchesContainer.addEventListener('click', (e) => {
-                        if (e.target.classList.contains('swatch')) {
-                            const colorId = e.target.dataset.colorId;
-                            document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-                            e.target.classList.add('active');
-                            updateSizeOptions(colorId);
-                            // You can add logic to update main image and thumbnails here as well
                         }
                     });
+                    updatePrice();
+                };
 
-                    variantSelect.addEventListener('change', updatePrice);
-                    
-                    // Initial setup
-                    const firstColorId = Object.keys(variantsByColor)[0];
+                colorSwatchesContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('swatch')) {
+                        const colorId = e.target.dataset.colorId;
+                        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+                        e.target.classList.add('active');
+                        updateSizeOptions(colorId);
+                    }
+                });
+                
+                variantSelect.addEventListener('change', updatePrice);
+                
+                const firstColorId = Object.keys(variantsByColor)[0];
+                if (colorSwatchesContainer.querySelector('.swatch')) {
                     colorSwatchesContainer.querySelector('.swatch').classList.add('active');
-                    updateSizeOptions(firstColorId);
-
-                } else {
-                    // This is a simple product (e.g., Mug)
-                    product.variants.forEach(variant => {
-                        const option = document.createElement('option');
-                        option.value = variant.id;
-                        option.textContent = variant.title;
-                        variantSelect.appendChild(option);
-                    });
-                    
-                    variantSelect.addEventListener('change', () => {
-                        const selectedVariant = product.variants.find(v => v.id == variantSelect.value);
-                        if(selectedVariant) {
-                            priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
-                            const newImage = product.images.find(img => img.variant_ids.includes(selectedVariant.id));
-                            if(newImage) mainImage.src = newImage.src;
-                        }
-                    });
-                    updatePrice(); // Set initial price
                 }
+                updateSizeOptions(firstColorId);
 
-            } catch (e) {
-                console.error("Error fetching or rendering product:", e);
-                container.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: ARTIFACT DATA CORRUPTED_</p>`;
+            } else {
+                // --- LOGIC FOR PRODUCTS WITHOUT COLORS (Simple Products) ---
+                product.variants.forEach(variant => {
+                    const option = document.createElement('option');
+                    option.value = variant.id;
+                    option.textContent = variant.title;
+                    variantSelect.appendChild(option);
+                });
+                
+                const updateSimpleProduct = () => {
+                    const selectedVariant = product.variants.find(v => v.id == variantSelect.value);
+                    if (selectedVariant) {
+                        priceDisplay.textContent = `$${(selectedVariant.price / 100).toFixed(2)}`;
+                        const newImage = product.images.find(img => img.variant_ids.includes(selectedVariant.id));
+                        if(newImage) mainImage.src = newImage.src;
+                    }
+                };
+                
+                variantSelect.addEventListener('change', updateSimpleProduct);
+                updateSimpleProduct(); // Set initial price
             }
-        });
+        }
         
         function initializePlexusBackground() { /* ... full plexus code ... */ }
     </script>
