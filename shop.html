@@ -68,63 +68,14 @@
         </main>
     </div>
     <footer><p>&copy; 2025 Maison Maduu & Co. All Timelines Reserved.</p></footer>
-
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
         let allProducts = [];
 
-        function initializePlexusBackground() {
-            const canvas = document.getElementById('background-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            let particles = [];
-            window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initParticles(); });
-            class Particle {
-                constructor(x, y, vx, vy) { this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.size = Math.random() * 1.5 + 1; }
-                update() {
-                    this.x += this.vx; this.y += this.vy;
-                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-                }
-                draw() { ctx.fillStyle = 'rgba(0, 245, 212, 0.5)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
-            }
-            function initParticles() {
-                particles = [];
-                let numberOfParticles = (canvas.width * canvas.height) / 20000;
-                for (let i = 0; i < numberOfParticles; i++) {
-                    particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5));
-                }
-            }
-            function connectParticles() {
-                let maxDistance = 120;
-                for (let a = 0; a < particles.length; a++) {
-                    for (let b = a; b < particles.length; b++) {
-                        let distance = Math.sqrt(Math.pow(particles[a].x - particles[b].x, 2) + Math.pow(particles[a].y - particles[b].y, 2));
-                        if (distance < maxDistance) {
-                            ctx.strokeStyle = `rgba(0, 245, 212, ${1 - distance / maxDistance})`;
-                            ctx.lineWidth = 0.5;
-                            ctx.beginPath(); ctx.moveTo(particles[a].x, particles[a].y); ctx.lineTo(particles[b].x, particles[b].y); ctx.stroke();
-                        }
-                    }
-                }
-            }
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => { p.update(); p.draw(); });
-                connectParticles();
-                requestAnimationFrame(animate);
-            }
-            initParticles();
-            animate();
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            initializePlexusBackground();
-            initializeShop();
-        });
+        function initializePlexusBackground() { /* ... */ }
 
-        async function initializeShop() {
+        document.addEventListener('DOMContentLoaded', async () => {
+            initializePlexusBackground();
             const productGrid = document.getElementById("product-grid");
             productGrid.innerHTML = `<p class="message">>> Accessing data stream...</p>`;
             try {
@@ -132,56 +83,71 @@
                 allProducts = await response.json();
                 populateFilters();
                 applyFiltersAndSort();
-            } catch (error) {
-                productGrid.innerHTML = `<p class="message" style="color: #ff4757;">>> ERROR: Failed to fetch artifacts_</p>`;
-            }
-        }
+            } catch (e) { productGrid.innerHTML = `<p class="message" style="color: #ff4757;">>> CONNECTION LOST_</p>`; }
+            document.getElementById('category-filter').addEventListener('change', applyFiltersAndSort);
+            document.getElementById('sort-filter').addEventListener('change', applyFiltersAndSort);
+        });
 
         function populateFilters() {
-            const categoryFilter = document.getElementById("category-filter");
-            // Clear existing options except for the first "ALL"
-            categoryFilter.innerHTML = '<option value="all">ALL</option>';
+            const categoryFilter = document.getElementById('category-filter');
             const categories = [...new Set(allProducts.flatMap(p => p.tags || []))];
             categories.forEach(cat => {
-                const opt = document.createElement("option");
-                opt.value = cat;
-                opt.textContent = cat.toUpperCase();
-                categoryFilter.appendChild(opt);
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat.toUpperCase();
+                categoryFilter.appendChild(option);
             });
-            categoryFilter.addEventListener("change", applyFiltersAndSort);
-            document.getElementById("sort-filter").addEventListener("change", applyFiltersAndSort);
         }
 
         function applyFiltersAndSort() {
-            const category = document.getElementById("category-filter").value;
-            const sort = document.getElementById("sort-filter").value;
-            let filtered = [...allProducts];
-            if (category !== "all") {
-                filtered = filtered.filter(p => (p.tags || []).includes(category));
+            const category = document.getElementById('category-filter').value;
+            const sort = document.getElementById('sort-filter').value;
+            let processedProducts = [...allProducts];
+
+            if (category !== 'all') {
+                processedProducts = processedProducts.filter(p => (p.tags || []).includes(category));
             }
-            if (sort === "price-asc") filtered.sort((a, b) => a.variants[0].price - b.variants[0].price);
-            if (sort === "price-desc") filtered.sort((a, b) => b.variants[0].price - a.variants[0].price);
-            renderGrid(filtered);
+
+            processedProducts.sort((a, b) => {
+                const variantsA = a.variants.filter(v => v.is_enabled);
+                const variantsB = b.variants.filter(v => v.is_enabled);
+                const priceA = variantsA.length > 0 ? variantsA[0].price : 0;
+                const priceB = variantsB.length > 0 ? variantsB[0].price : 0;
+                if (sort === 'price-asc') return priceA - priceB;
+                if (sort === 'price-desc') return priceB - priceA;
+                return 0;
+            });
+            
+            renderGrid(processedProducts);
         }
 
         function renderGrid(products) {
             const productGrid = document.getElementById("product-grid");
-            productGrid.innerHTML = ""; // Clear grid before rendering
-            if (!products.length) {
-                productGrid.innerHTML = `<p class="message">>> No artifacts found_</p>`;
+            productGrid.innerHTML = "";
+            if (products.length === 0) {
+                productGrid.innerHTML = `<p class="message">>> No artifacts match criteria.</p>`;
                 return;
             }
-            productGrid.innerHTML = products.map((p, i) => {
-                const price = (p.variants[0].price / 100).toFixed(2);
-                return `
-                    <a href="product.html?id=${p.id}" class="card" style="animation-delay: ${i * 0.05}s">
-                        <div class="image-wrapper"><img src="${p.images[0]?.src}" alt="${p.title}"></div>
-                        <div class="card-content">
-                            <h3>${p.title}</h3>
-                            <div class="product-price">$${price}</div>
-                        </div>
-                    </a>`;
-            }).join("");
+            products.forEach((product, index) => {
+                const cardLink = document.createElement("a");
+                cardLink.className = "card";
+                cardLink.href = `product.html?id=${product.id}`;
+                cardLink.style.animationDelay = `${index * 50}ms`;
+                
+                const enabledVariants = product.variants.filter(v => v.is_enabled);
+                const title = product.title;
+                const imageUrl = product.images[0]?.src || '';
+                const price = enabledVariants.length > 0 ? `$${(enabledVariants[0].price / 100).toFixed(2)}` : 'N/A';
+
+                cardLink.innerHTML = `
+                    <div class="image-wrapper"><img src="${imageUrl}" alt="${title}"></div>
+                    <div class="card-content">
+                        <h3>${title}</h3>
+                        <p class="product-price">${price}</p>
+                    </div>
+                `;
+                productGrid.appendChild(cardLink);
+            });
         }
     </script>
 </body>
