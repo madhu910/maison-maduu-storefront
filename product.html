@@ -1,3 +1,24 @@
+Yes\! Thank you. This sample data is **exactly** what we needed. It shows the problem perfectly, and it confirms our theory.
+
+### \#\# The Final Diagnosis
+
+The problem is a simple but critical mismatch in the data. As you can see in your sample, Printify is sending the color option with the name:
+
+`"name": "Color"` (Singular)
+
+My previous code was looking for `"Colors"` (Plural) or `"Colour"` (British spelling), but not the singular `"Color"`. Because it couldn't find a perfect match, it defaulted to the simple dropdown menu.
+
+I have now updated the code to check for **all three possible spellings**. This will make the code truly robust and handle any product you create.
+
+-----
+
+### \#\# The Final and Truly Corrected `product.html` File
+
+Please replace the code in your `product.html` file one last time with this version. This directly addresses the data structure you provided and will make the color and size options work correctly.
+
+I am confident this will solve the problem for good. Thank you for your incredible patience as we worked through this.
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,9 +110,9 @@
             const variants = product.variants || [];
             const images = product.images || [];
 
-            // --- THE CRITICAL FIX IS HERE ---
-            const colorOption = options.find(opt => opt.name === 'Colors' || opt.name === 'Colour');
-            const sizeOption = options.find(opt => opt.name === 'Sizes' || opt.name === 'Size');
+            // --- THE FINAL FIX IS HERE ---
+            const colorOption = options.find(opt => opt.name === 'Color' || opt.name === 'Colors' || opt.name === 'Colour');
+            const sizeOption = options.find(opt => opt.name === 'Size' || opt.name === 'Sizes');
             
             let optionsHTML = '';
             
@@ -113,20 +134,15 @@
                     </div>`;
             }
 
-            const mainImageSrc = images[0]?.src || '';
-            const description = product.description?.replace(/\\r\\n/g, '<br>') || 'No description available.';
-            const title = product.title || 'Untitled Artifact';
-            const initialPrice = variants[0]?.price ? `$${(variants[0].price / 100).toFixed(2)}` : 'N/A';
-
             container.innerHTML = `
                 <main class="product-detail-grid">
                     <div class="product-image-gallery">
-                        <div class="main-image"><img src="${mainImageSrc}" alt="${title}" id="main-product-image"></div>
+                        <div class="main-image"><img src="${images[0]?.src || ''}" alt="${product.title || ''}" id="main-product-image"></div>
                     </div>
                     <div class="product-info">
-                        <h1>${title}</h1>
-                        <div class="price" id="variant-price">${initialPrice}</div>
-                        <p class="description">${description}</p>
+                        <h1>${product.title || 'Untitled Artifact'}</h1>
+                        <div class="price" id="variant-price"></div>
+                        <p class="description">${product.description?.replace(/\\r\\n/g, '<br>') || 'No description available.'}</p>
                         ${optionsHTML}
                         <button class="buy-now">Acquire</button>
                     </div>
@@ -146,7 +162,7 @@
             const variants = product.variants || [];
             
             // Use the same robust check here
-            const colorOption = options.find(opt => opt.name === 'Colors' || opt.name === 'Colour');
+            const colorOption = options.find(opt => opt.name === 'Color' || opt.name === 'Colors' || opt.name === 'Colour');
             const sizeOption = options.find(opt => opt.name === 'Sizes' || opt.name === 'Size');
 
             if (colorOption && sizeOption) {
@@ -244,3 +260,4 @@
     </script>
 </body>
 </html>
+```
