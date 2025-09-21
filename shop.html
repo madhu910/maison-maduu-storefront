@@ -109,8 +109,8 @@
             }
 
             processedProducts.sort((a, b) => {
-                const variantsA = a.variants.filter(v => v.is_enabled);
-                const variantsB = b.variants.filter(v => v.is_enabled);
+                const variantsA = (a.variants || []).filter(v => v.is_enabled);
+                const variantsB = (b.variants || []).filter(v => v.is_enabled);
                 const priceA = variantsA.length > 0 ? variantsA[0].price : 0;
                 const priceB = variantsB.length > 0 ? variantsB[0].price : 0;
                 if (sort === 'price-asc') return priceA - priceB;
@@ -124,7 +124,7 @@
         function renderGrid(products) {
             const productGrid = document.getElementById("product-grid");
             productGrid.innerHTML = "";
-            if (products.length === 0) {
+            if (!products || products.length === 0) {
                 productGrid.innerHTML = `<p class="message">>> No artifacts match criteria.</p>`;
                 return;
             }
@@ -134,9 +134,9 @@
                 cardLink.href = `product.html?id=${product.id}`;
                 cardLink.style.animationDelay = `${index * 50}ms`;
                 
-                const enabledVariants = product.variants.filter(v => v.is_enabled);
-                const title = product.title;
-                const imageUrl = product.images[0]?.src || '';
+                const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
+                const title = product.title || 'Untitled Artifact';
+                const imageUrl = product.images?.[0]?.src || '';
                 const price = enabledVariants.length > 0 ? `$${(enabledVariants[0].price / 100).toFixed(2)}` : 'N/A';
 
                 cardLink.innerHTML = `
