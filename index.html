@@ -29,6 +29,7 @@
             text-align: center;
         }
         
+        .hero { min-height: 100vh; }
         .hero h1 { font-size: clamp(3.5rem, 10vw, 7rem); font-weight: 800; line-height: 1; margin: 0; }
         .hero p { font-size: clamp(1rem, 4vw, 1.5rem); color: var(--text-secondary); max-width: 600px; margin: 2rem 0 0 0; }
 
@@ -95,13 +96,13 @@
     <section class="scroll-section">
         <h2 class="scroll-animate section-headline">Curated by design. Printed on demand.</h2>
         <div class="category-grid">
-            <a href="shop.html?category=T-Shirts" class="category-card scroll-animate" style="transition-delay: 0.1s;">
+            <a href="shop.html?category=T-shirts" class="category-card scroll-animate" style="transition-delay: 0.1s;">
                 <img src="https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="T-Shirts">
                 <h3>T-Shirts</h3>
             </a>
             <a href="shop.html?category=Sweatshirts" class="category-card scroll-animate" style="transition-delay: 0.2s;">
                 <img src="https://images.pexels.com/photos/769772/pexels-photo-769772.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Hoodies & Sweatshirts">
-                <h3>Hoodies</h3>
+                <h3>Sweatshirts</h3>
             </a>
             <a href="shop.html?category=Mugs" class="category-card scroll-animate" style="transition-delay: 0.3s;">
                 <img src="https://images.pexels.com/photos/1684151/pexels-photo-1684151.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Mugs">
@@ -116,37 +117,19 @@
     
     <script>
         const scrollElements = document.querySelectorAll(".scroll-animate");
-
         const elementInView = (el, dividend = 1) => {
             const elementTop = el.getBoundingClientRect().top;
-            return (
-                elementTop <= (window.innerHeight || document.documentElement.clientHeight) / dividend
-            );
+            return (elementTop <= (window.innerHeight || document.documentElement.clientHeight) / dividend);
         };
-
-        const displayScrollElement = (element) => {
-            element.classList.add("is-visible");
-        };
-
-        const hideScrollElement = (element) => {
-            element.classList.remove("is-visible");
-        };
-
+        const displayScrollElement = (el) => el.classList.add("is-visible");
+        const hideScrollElement = (el) => el.classList.remove("is-visible");
         const handleScrollAnimation = () => {
             scrollElements.forEach((el) => {
-                if (elementInView(el, 1.25)) {
-                    displayScrollElement(el);
-                } else {
-                    hideScrollElement(el);
-                }
+                if (elementInView(el, 1.25)) { displayScrollElement(el); } 
+                else { hideScrollElement(el); }
             })
         }
-
-        window.addEventListener("scroll", () => {
-            handleScrollAnimation();
-        });
-        
-        // Trigger once on load
+        window.addEventListener("scroll", handleScrollAnimation);
         handleScrollAnimation();
     </script>
 </body>
