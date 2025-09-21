@@ -1,72 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Nexus // Maison Maduu & Co.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS is the same as your last working shop.html */
+        :root {
+            --bg-color: #ffffff; --text-primary: #1d1d1f; --text-secondary: #6e6e73;
+            --accent-color: #0071e3; --border-color: #d2d2d7;
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: var(--font-main); background-color: var(--bg-color); color: var(--text-primary); margin: 0; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 1440px; margin: 0 auto; padding: 0 2rem; }
+        .main-header { padding: 1.5rem 0; border-bottom: 1px solid var(--border-color); text-align: center; }
+        .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
+        .shop-header { padding: 4rem 0 2rem 0; text-align: center; }
+        .shop-header h1 { font-size: 3.5rem; font-weight: 700; margin: 0; }
+        .filter-bar { display: flex; justify-content: center; align-items: center; gap: 1rem; padding: 2rem 0; }
+        .filter-btn { background: none; border: none; font-size: 1.1rem; color: var(--text-secondary); cursor: pointer; padding: 0.5rem 1rem; border-radius: 50px; transition: all 0.2s ease; }
+        .filter-btn.active { color: var(--accent-color); background-color: #eaf5ff; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem; padding: 2rem 0 6rem 0; }
+        .card { text-decoration: none; color: var(--text-primary); text-align: center; transition: transform 0.3s ease; opacity: 0; animation: fadeIn 0.5s ease-out forwards; }
+        .card:hover { transform: translateY(-8px); }
+        .card .image-wrapper { background-color: #f5f5f7; border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; }
+        .card img { width: 100%; height: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card h3 { font-size: 1.2rem; font-weight: 600; margin: 0.5rem 0; }
+        .card p { font-size: 1.1rem; color: var(--text-secondary); margin: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
+    <header class="main-header">
+        <a href="index.html" class="nav-brand">Maison Maduu & Co.</a>
+    </header>
+    <div class="container">
+        <main>
+            <div class="shop-header">
+                <h1>The Collection</h1>
+            </div>
+            <div class="filter-bar" id="filter-bar"></div>
+            <div class="product-grid" id="product-grid"><p>Loading Products...</p></div>
+        </main>
+    </div>
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
         let allProducts = [];
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function initializeShop() {
             const productGrid = document.getElementById("product-grid");
-            productGrid.innerHTML = `<p class="message">>> Accessing data stream...</p>`;
             try {
                 const response = await fetch(`${API_BASE_URL}/api/products`);
                 allProducts = await response.json();
                 
                 populateFilters();
 
-                // --- NEW LOGIC IS HERE ---
-                // Check if a category was passed in the URL
                 const params = new URLSearchParams(window.location.search);
                 const categoryFromURL = params.get('category');
                 
                 if (categoryFromURL) {
-                    const categoryFilter = document.getElementById('category-filter');
-                    // Check if the category exists in the dropdown
-                    if ([...categoryFilter.options].some(o => o.value === categoryFromURL)) {
-                        categoryFilter.value = categoryFromURL;
-                    }
+                    const activeBtn = document.querySelector(`.filter-btn[data-category="${categoryFromURL}"]`);
+                    if(activeBtn) activeBtn.classList.add('active');
+                } else {
+                     document.querySelector('.filter-btn[data-category="all"]').classList.add('active');
                 }
                 
-                applyFiltersAndSort(); // This will now use the pre-selected category
+                applyFilters();
 
-            } catch (e) { /* ... error handling ... */ }
-            
-            document.getElementById('category-filter').addEventListener('change', applyFiltersAndSort);
-            document.getElementById('sort-filter').addEventListener('change', applyFiltersAndSort);
-        });
+            } catch (e) { productGrid.innerHTML = `<p>Failed to load products.</p>`; }
+        }
 
         function populateFilters() {
-            const categoryFilter = document.getElementById('category-filter');
-            // Using Printful's main_category_name for better filtering
-            const categories = [...new Set(allProducts.map(p => p.main_category_name).filter(Boolean))];
-            categories.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = cat;
-                option.textContent = cat;
-                categoryFilter.appendChild(option);
+            const filterBar = document.getElementById('filter-bar');
+            const categories = ['all', ...new Set(allProducts.map(p => p.main_category_name).filter(Boolean))];
+            
+            filterBar.innerHTML = categories.map(cat => 
+                `<button class="filter-btn" data-category="${cat}">${cat === 'all' ? 'All Products' : cat}</button>`
+            ).join('');
+
+            filterBar.addEventListener('click', e => {
+                if(e.target.classList.contains('filter-btn')){
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    applyFilters();
+                }
             });
         }
 
-        function applyFiltersAndSort() {
-            const category = document.getElementById('category-filter').value;
-            const sort = document.getElementById('sort-filter').value;
-            let processedProducts = [...allProducts];
-
-            if (category !== 'all') {
-                processedProducts = processedProducts.filter(p => p.main_category_name === category);
-            }
-
-            // ... The rest of the sorting and rendering logic is the same ...
+        function applyFilters() {
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.category;
+            let filteredProducts = (activeFilter === 'all') 
+                ? allProducts 
+                : allProducts.filter(p => p.main_category_name === activeFilter);
+            
+            renderGrid(filteredProducts);
         }
 
         function renderGrid(products) {
-            // ... This function is the same ...
+            const productGrid = document.getElementById("product-grid");
+            productGrid.innerHTML = "";
+            products.forEach((product, index) => {
+                const cardLink = document.createElement("a");
+                cardLink.className = "card";
+                cardLink.href = `product.html?id=${product.id}`;
+                cardLink.style.animationDelay = `${index * 50}ms`;
+
+                cardLink.innerHTML = `
+                    <div class="image-wrapper">
+                        <img src="${product.thumbnail_url}" alt="${product.name}">
+                    </div>
+                    <h3>${product.name}</h3>
+                    <p>${product.variants} Variants</p>
+                `;
+                productGrid.appendChild(cardLink);
+            });
         }
+
+        document.addEventListener('DOMContentLoaded', initializeShop);
     </script>
 </body>
 </html>
