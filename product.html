@@ -32,11 +32,15 @@
         .thumbnail.active { border-color: var(--accent-color); }
         .product-info h1 { font-size: 2.5rem; font-weight: 700; margin: 0 0 1rem 0; }
         .product-info .price { font-size: 1.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 2rem; }
+        .product-info .description { margin-bottom: 2rem; line-height: 1.6; color: var(--text-secondary); }
         .option-group { margin-bottom: 2rem; }
         .option-group label { font-weight: 600; display: block; margin-bottom: 1rem; }
         .pill-container { display: flex; flex-wrap: wrap; gap: 0.75rem; }
         .pill { padding: 0.75rem 1.5rem; border: 1px solid var(--border-color); border-radius: 50px; cursor: pointer; transition: all 0.2s ease; }
         .pill.active { border-color: var(--accent-color); color: var(--accent-color); box-shadow: 0 0 0 1px var(--accent-color); }
+        .pill.disabled { opacity: 0.4; cursor: not-allowed; background-color: var(--border-color); }
+        .color-pill { width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; }
+        .color-dot { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-color); }
         .buy-now { width: 100%; background-color: var(--accent-color); color: var(--bg-color); font-size: 1.2rem; font-weight: 600; padding: 1.2rem; border-radius: 12px; border: none; cursor: pointer; transition: opacity 0.2s ease; }
         .buy-now:hover { opacity: 0.8; }
         [v-cloak] { display: none; }
@@ -61,42 +65,83 @@
             <div class="product-info">
                 <h1>{{ product.sync_product.name }}</h1>
                 <p class="price">{{ formattedPrice }}</p>
-                <div class="option-group">
+                <p class="description" v-html="formattedDescription"></p>
+
+                <div v-if="colors.length > 0" class="option-group">
+                    <label>Color</label>
+                    <div class="pill-container">
+                        <div v-for="color in colors" :key="color.key"
+                             class="pill color-pill"
+                             :class="{ active: color.key === selectedColor }"
+                             @click="selectedColor = color.key">
+                             <div class="color-dot" :style="{ backgroundColor: color.hex }"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="sizes.length > 0" class="option-group">
                     <label>Size</label>
                     <div class="pill-container">
-                         <div v-for="size in sizes" :key="size" class="pill" :class="{ active: size === selectedSize }" @click="selectedSize = size">
-                              {{ size }}
+                         <div v-for="size in sizes" :key="size.value"
+                              class="pill"
+                              :class="{ active: size.value === selectedSize, disabled: !size.available }"
+                              @click="size.available ? selectedSize = size.value : null">
+                              {{ size.value }}
                          </div>
                     </div>
                 </div>
+                
                 <button class="buy-now">Acquire</button>
             </div>
         </main>
     </div>
+
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
         new Vue({
             el: '#app',
-            data: { product: null, selectedSize: null, mainImage: '' },
+            data: { product: null, selectedColor: null, selectedSize: null, mainImage: '' },
             computed: {
                 uniqueMockups() {
                     if (!this.product) return [];
-                    const mockups = this.product.sync_variants
+                    const mockups = (this.product.sync_variants || [])
                         .flatMap(variant => variant.files.filter(file => file.type === 'preview'))
-                        .map(file => ({ url: file.url }));
+                        .map(file => ({ url: file.preview_url, variantId: file.variant_id }));
                     return [...new Map(mockups.map(item => [item.url, item])).values()];
+                },
+                colors() {
+                    if (!this.product) return [];
+                    const colorMap = new Map();
+                    (this.product.sync_variants || []).forEach(v => {
+                        if (v.color_code && v.color) {
+                            colorMap.set(v.color, { key: v.color, hex: v.color_code });
+                        }
+                    });
+                    return Array.from(colorMap.values());
                 },
                 sizes() {
                     if (!this.product) return [];
-                    const allSizes = this.product.sync_variants.map(v => v.size);
-                    return [...new Set(allSizes)];
+                    const allSizes = [...new Set(this.product.sync_variants.map(v => v.size))];
+                    const availableSizes = new Set(this.product.sync_variants
+                        .filter(v => v.color === this.selectedColor)
+                        .map(v => v.size)
+                    );
+                    return allSizes.map(size => ({
+                        value: size,
+                        available: availableSizes.has(size)
+                    }));
                 },
                 selectedVariant() {
-                    if (!this.product || !this.selectedSize) return this.product?.sync_variants[0];
-                    return this.product.sync_variants.find(v => v.size === this.selectedSize);
+                    if (!this.product || !this.selectedColor || !this.selectedSize) return null;
+                    return this.product.sync_variants.find(v => v.color === this.selectedColor && v.size === this.selectedSize);
                 },
                 formattedPrice() {
-                    return this.selectedVariant ? `$${this.selectedVariant.retail_price}` : 'Select an option';
+                    if (this.selectedVariant) return `$${this.selectedVariant.retail_price}`;
+                    if(this.product) return `From $${this.product.sync_variants[0].retail_price}`;
+                    return 'Select Options';
+                },
+                formattedDescription() {
+                    return this.product?.sync_product?.description?.replace(/\n/g, '<br>') || '';
                 }
             },
             methods: {
@@ -104,10 +149,30 @@
                     try {
                         const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
                         const data = await response.json();
+                        
+                        // Clean up Printful data to make it easier to work with
+                        data.sync_variants = data.sync_variants.map(variant => ({
+                            ...variant,
+                            color: variant.name.split(' - ')[1]?.split(' / ')[0] || 'Default',
+                            size: variant.size
+                        }));
+                        
                         this.product = data;
                         this.mainImage = this.uniqueMockups[0]?.url;
-                        this.selectedSize = this.sizes[0];
+                        this.selectedColor = this.colors[0]?.key;
                     } catch (e) { console.error("Failed to load product", e); }
+                }
+            },
+            watch: {
+                selectedColor(newColor) {
+                    const firstAvailableSize = this.sizes.find(s => s.available);
+                    this.selectedSize = firstAvailableSize ? firstAvailableSize.value : null;
+                },
+                selectedVariant(newVariant) {
+                    if (newVariant) {
+                        const imageForVariant = this.product.images.find(img => img.variant_ids.includes(newVariant.variant_id));
+                        if(imageForVariant) this.mainImage = imageForVariant.preview_url;
+                    }
                 }
             },
             created() {
