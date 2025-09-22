@@ -64,7 +64,6 @@
             women: { "All Women's Clothing": [], "Tops": ["T-shirts", "Polo shirts", "All-over shirts", "Tank tops", "Crop tops", "Embroidered shirts", "3/4 sleeve shirts", "Long sleeve shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts"], "Dresses & Skirts": ["Dresses", "Skirts"], "Bottoms": ["Custom women's sweatpants & joggers", "Leggings", "Shorts", "Pants"], "Activewear": ["Sports bras", "Swimwear", "Sleepwear"] }
         };
 
-        // --- NEW: Helper function for smart matching ---
         function normalizeString(str) {
             const lower = str.toLowerCase();
             return lower.endsWith('s') ? lower.slice(0, -1) : lower;
@@ -113,7 +112,6 @@
             if (activeCategory === 'all') {
                 categoryFiltered = genderFiltered;
             } else {
-                // --- THE FIX IS HERE ---
                 const normalizedCategory = normalizeString(activeCategory);
                 categoryFiltered = genderFiltered.filter(p => 
                     (p.tags || []).some(tag => normalizeString(tag) === normalizedCategory)
@@ -158,7 +156,8 @@
                 allProducts = await response.json();
                 filterAndRenderProducts();
             } catch (e) {
-                document.getElementById("product-grid").innerHTML = `<p>Failed to load products.</p>`;
+                console.error("Failed to load products:", e);
+                document.getElementById("product-grid").innerHTML = `<p>Failed to load products. Check console for details.</p>`;
             }
         });
     </script>
