@@ -19,7 +19,7 @@
             --card-bg: #FFFFFF; --border-color: #EAEAEA; --accent-color: #B2844E;
         }
         *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; transition: all 0.5s ease; }
         .container { max-width: 1440px; margin: 0 auto; padding: 0 2rem; }
         .main-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); text-align: center; background: var(--bg-color); position: sticky; top: 0; z-index: 50; }
         .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
@@ -33,20 +33,9 @@
         .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
         .card { text-decoration: none; color: var(--text-primary); text-align: center; }
-        .card .image-wrapper { 
-            background-color: var(--card-bg); border: 1px solid var(--border-color);
-            border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem;
-            position: relative;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
+        .card .image-wrapper { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
         .card:hover .image-wrapper { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .card .image-wrapper img {
-            width: 100%; aspect-ratio: 1/1; object-fit: cover;
-            position: absolute; top: 0; left: 0;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-        .card .image-wrapper img.active { opacity: 1; z-index: 2; }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
         .card h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
         .card p { font-size: 1rem; color: var(--text-secondary); margin: 0; }
     </style>
@@ -74,7 +63,7 @@
             men: { "All Men's Clothing": [], "Shirts": ["T-shirts", "All-over shirts", "Polo shirts", "Tank tops", "3/4 sleeve shirts", "Long sleeve shirts", "Embroidered shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts", "Hoodies", "Sweatshirts", "Knitwear"], "Bottoms": ["Sweatpants & joggers", "Underwear", "Leggings", "Shorts", "Pants"] },
             women: { "All Women's Clothing": [], "Tops": ["T-shirts", "Polo shirts", "All-over shirts", "Tank tops", "Crop tops", "Embroidered shirts", "3/4 sleeve shirts", "Long sleeve shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts"], "Dresses & Skirts": ["Dresses", "Skirts"], "Bottoms": ["Custom women's sweatpants & joggers", "Leggings", "Shorts", "Pants"], "Activewear": ["Sports bras", "Swimwear", "Sleepwear"] }
         };
-        
+
         function normalizeString(str) {
             const lower = str.toLowerCase();
             if (lower.endsWith('es')) { return lower.slice(0, -2); }
@@ -125,12 +114,10 @@
             if (activeCategory === 'all') {
                 categoryFiltered = genderFiltered;
             } else {
-                categoryFiltered = genderFiltered.filter(p => {
-                    const normalizedCategory = normalizeString(activeCategory);
-                    const inTags = (p.tags || []).some(tag => normalizeString(tag) === normalizedCategory);
-                    const inName = p.name.toLowerCase().includes(normalizedCategory);
-                    return inTags || inName;
-                });
+                const normalizedCategory = normalizeString(activeCategory);
+                categoryFiltered = genderFiltered.filter(p => 
+                    (p.tags || []).some(tag => normalizeString(tag) === normalizedCategory)
+                );
             }
             renderGrid(categoryFiltered);
         }
@@ -142,7 +129,6 @@
                 productGrid.innerHTML = `<p>No products found in this category.</p>`;
                 return;
             }
-
             products.forEach(product => {
                 const cardLink = document.createElement("a");
                 cardLink.className = "card";
@@ -151,66 +137,13 @@
                 const variantCountText = product.variants > 1 ? `${product.variants} Variants` : `${product.variants} Variant`;
 
                 cardLink.innerHTML = `
-                    <div class="image-wrapper" id="wrapper-${product.id}">
-                        <img src="${product.thumbnail_url}" alt="${product.name}" class="active">
+                    <div class="image-wrapper">
+                        <img src="${product.thumbnail_url}" alt="${product.name}">
                     </div>
                     <h3>${product.name}</h3>
                     <p>${variantCountText}</p>
                 `;
                 productGrid.appendChild(cardLink);
-
-                const imageWrapper = document.getElementById(`wrapper-${product.id}`);
-                let imageInterval;
-
-                imageWrapper.addEventListener('mouseenter', async () => {
-                    if (imageWrapper.dataset.loaded !== "true") {
-                        try {
-                            const res = await fetch(`${API_BASE_URL}/api/products/${product.id}`);
-                            const fullProduct = await res.json();
-                            
-                            const uniqueImages = [...new Map(
-                                (fullProduct.sync_variants || [])
-                                .flatMap(v => v.files.filter(f => f.type === 'preview'))
-                                .map(item => [item.url, item.url])
-                            ).values()];
-
-                            uniqueImages.slice(1).forEach(url => {
-                                const img = document.createElement("img");
-                                img.src = url;
-                                img.alt = product.name;
-                                imageWrapper.appendChild(img);
-                            });
-
-                            imageWrapper.dataset.loaded = "true";
-                        } catch (err) {
-                            console.error("Image fetch failed:", err);
-                        }
-                    }
-                    startImageCycle(imageWrapper);
-                });
-
-                imageWrapper.addEventListener('mouseleave', () => {
-                    stopImageCycle(imageWrapper);
-                });
-
-                const startImageCycle = (wrapper) => {
-                    const images = wrapper.querySelectorAll("img");
-                    if (images.length < 2) return;
-
-                    let currentIndex = 0;
-                    clearInterval(imageInterval);
-                    imageInterval = setInterval(() => {
-                        images[currentIndex].classList.remove("active");
-                        currentIndex = (currentIndex + 1) % images.length;
-                        images[currentIndex].classList.add("active");
-                    }, 1000);
-                };
-
-                const stopImageCycle = (wrapper) => {
-                    clearInterval(imageInterval);
-                    const images = wrapper.querySelectorAll("img");
-                    images.forEach((img, idx) => img.classList.toggle("active", idx === 0));
-                };
             });
         }
 
