@@ -3,163 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Collection // Maison Maduu & Co.</title>
+    <title>Maison Maduu & Co. - Elevate Your Style</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Default Theme (Men's) */
-            --bg-color: #000000; --text-primary: #FFFFFF; --text-secondary: #a1a1a6;
-            --card-bg: #1c1c1e; --border-color: #3a3a3c; --accent-color: #FFFFFF;
+            --primary-bg: #1a1a1a;
+            --secondary-bg: #f5f5f5;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --accent-color: #d4af37; /* Gold/Bronze accent */
+            --transition-speed: 0.8s;
         }
-        body.theme-women {
-            /* Women's Theme */
-            --bg-color: #F5F5F4; --text-primary: #1C1C1E; --text-secondary: #8A8A8E;
-            --card-bg: #FFFFFF; --border-color: #EAEAEA; --accent-color: #B2844E;
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            color: var(--text-light);
+            background-color: var(--primary-bg);
         }
-        *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; transition: all 0.5s ease; }
-        .container { max-width: 1440px; margin: 0 auto; padding: 0 2rem; }
-        .main-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); text-align: center; background: var(--bg-color); position: sticky; top: 0; z-index: 50; }
-        .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
-        .shop-layout { display: grid; grid-template-columns: 240px 1fr; gap: 3rem; align-items: flex-start; padding: 4rem 0; }
-        .sidebar { position: sticky; top: 100px; }
-        .sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
-        .sidebar-nav .group-title { font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 2rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
-        .sidebar-nav .group-title:first-child { margin-top: 0; }
-        .sidebar-nav a { display: block; text-decoration: none; color: var(--text-primary); padding: 0.6rem 0; font-size: 1.1rem; transition: color 0.2s ease; }
-        .sidebar-nav a:hover { color: var(--accent-color); }
-        .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
-        .card { text-decoration: none; color: var(--text-primary); text-align: center; }
-        .card .image-wrapper { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .card:hover .image-wrapper { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        .card h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
-        .card p { font-size: 1rem; color: var(--text-secondary); margin: 0; }
+
+        .landing-hero {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.6) grayscale(100%);
+            transition: filter var(--transition-speed) ease-in-out, transform var(--transition-speed) ease-in-out;
+            z-index: 1;
+        }
+
+        /* Specific background images - hidden by default, revealed on gender selection */
+        .bg-men {
+            background-image: url('https://images.pexels.com/photos/3777566/pexels-photo-3777566.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'); /* Stylish male model */
+            opacity: 0;
+        }
+        .bg-women {
+            background-image: url('https://images.pexels.com/photos/4041392/pexels-photo-4041392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'); /* Elegant female model */
+            opacity: 0;
+        }
+
+        /* Active background state */
+        .background-image.active {
+            filter: brightness(0.8) grayscale(0%);
+            transform: scale(1.05);
+            opacity: 1;
+        }
+        .background-image.active ~ .background-image:not(.active) {
+            opacity: 0; /* Hide other images when one is active */
+        }
+
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 900px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .site-title {
+            font-family: 'Lora', serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            letter-spacing: 5px;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInSlideUp 1.2s ease-out forwards;
+        }
+
+        .site-slogan {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(1rem, 2vw, 1.5rem);
+            margin-bottom: 3rem;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.8);
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInSlideUp 1.2s ease-out 0.3s forwards;
+        }
+
+        .gender-selection-wrapper {
+            display: flex;
+            gap: 2rem;
+            position: relative;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInSlideUp 1.2s ease-out 0.6s forwards;
+        }
+
+        .gender-card {
+            background-color: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 2.5rem 3.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.4s ease, border-color 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease;
+            text-decoration: none;
+            color: var(--text-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gender-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, rgba(212,175,55,0.1), rgba(212,175,55,0.3));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 1;
+        }
+
+        .gender-card:hover::before {
+            opacity: 1;
+        }
+
+        .gender-card:hover {
+            background-color: rgba(255,255,255,0.2);
+            border-color: var(--accent-color);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 15px var(--accent-color);
+        }
+
+        .gender-card h3 {
+            font-family: 'Lora', serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-top: 0;
+            margin-bottom: 1rem;
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .gender-card p {
+            font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+            margin-bottom: 0;
+            color: rgba(255,255,255,0.9);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Active styling for selected card (optional, if you want to keep it highlighted) */
+        .gender-card.active {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 25px var(--accent-color);
+            background-color: rgba(212,175,55,0.2);
+            transform: translateY(-5px);
+        }
+
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .gender-selection-wrapper {
+                flex-direction: column;
+                gap: 1.5rem;
+                width: 80%;
+            }
+            .gender-card {
+                padding: 2rem 2.5rem;
+                width: 100%;
+            }
+            .site-title {
+                letter-spacing: 3px;
+            }
+            .site-slogan {
+                margin-bottom: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <header class="main-header">
-        <a href="index.html" class="nav-brand">Maison Maduu & Co.</a>
-    </header>
-    <div class="container">
-        <div class="shop-layout">
-            <aside class="sidebar">
-                <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            </aside>
-            <main id="shop-main">
-                <div class="product-grid" id="product-grid"><p>Loading Collection...</p></div>
-            </main>
+    <div class="landing-hero">
+        <!-- Background Images -->
+        <div class="background-image bg-men" id="bg-men"></div>
+        <div class="background-image bg-women" id="bg-women"></div>
+
+        <div class="hero-content">
+            <h1 class="site-title">Maison Maduu & Co.</h1>
+            <p class="site-slogan">Crafting Elegance. Defining Style.</p>
+
+            <div class="gender-selection-wrapper">
+                <a href="shop.html" class="gender-card" data-gender="men" onclick="setGenderTheme('men', event)">
+                    <h3>Men's Collection</h3>
+                    <p>Discover sophisticated apparel & accessories.</p>
+                </a>
+                <a href="shop.html" class="gender-card" data-gender="women" onclick="setGenderTheme('women', event)">
+                    <h3>Women's Collection</h3>
+                    <p>Explore timeless fashion & contemporary trends.</p>
+                </a>
+            </div>
         </div>
     </div>
+
     <script>
-        const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
-        let allProducts = [];
-        let gender = 'men';
+        function setGenderTheme(gender, event) {
+            // Prevent default link behavior for a moment to allow animation
+            event.preventDefault(); 
 
-        const CATEGORIES = {
-            men: { "All Men's Clothing": [], "Shirts": ["T-shirts", "All-over shirts", "Polo shirts", "Tank tops", "3/4 sleeve shirts", "Long sleeve shirts", "Embroidered shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts", "Hoodies", "Sweatshirts", "Knitwear"], "Bottoms": ["Sweatpants & joggers", "Underwear", "Leggings", "Shorts", "Pants"] },
-            women: { "All Women's Clothing": [], "Tops": ["T-shirts", "Polo shirts", "All-over shirts", "Tank tops", "Crop tops", "Embroidered shirts", "3/4 sleeve shirts", "Long sleeve shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts"], "Dresses & Skirts": ["Dresses", "Skirts"], "Bottoms": ["Custom women's sweatpants & joggers", "Leggings", "Shorts", "Pants"], "Activewear": ["Sports bras", "Swimwear", "Sleepwear"] }
-        };
+            // Update localStorage
+            localStorage.setItem('shopSelection', gender);
 
-        function normalizeString(str) {
-            const lower = str.toLowerCase();
-            return lower.endsWith('s') ? lower.slice(0, -1) : lower;
+            // Animate background image
+            const bgMen = document.getElementById('bg-men');
+            const bgWomen = document.getElementById('bg-women');
+            const targetBg = gender === 'men' ? bgMen : bgWomen;
+            const otherBg = gender === 'men' ? bgWomen : bgMen;
+
+            // Activate the target background
+            targetBg.classList.add('active');
+            otherBg.classList.remove('active');
+
+            // Optional: Animate the cards themselves
+            document.querySelectorAll('.gender-card').forEach(card => card.classList.remove('active'));
+            event.currentTarget.classList.add('active'); // Highlight the clicked card
+
+            // Redirect after a short delay to let animations play
+            setTimeout(() => {
+                window.location.href = 'shop.html';
+            }, 600); // Adjust delay as needed (should be less than or equal to --transition-speed)
         }
-
-        function populateSidebar() {
-            const nav = document.getElementById('sidebar-nav');
-            const genderCategories = CATEGORIES[gender];
-            let navHTML = '<ul>';
-            for (const group in genderCategories) {
-                if (group.startsWith("All")) {
-                     navHTML += `<li><a href="#" class="category-link active" data-category="all">${group}</a></li>`;
-                } else {
-                    navHTML += `<li class="group-title">${group}</li>`;
-                    genderCategories[group].forEach(keyword => {
-                        navHTML += `<li><a href="#" class="category-link" data-category="${keyword}">${keyword}</a></li>`;
-                    });
-                }
-            }
-            navHTML += '</ul>';
-            nav.innerHTML = navHTML;
-
-            nav.addEventListener('click', e => {
-                e.preventDefault();
-                if (e.target.classList.contains('category-link')) {
-                    document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
-                    e.target.classList.add('active');
-                    filterAndRenderProducts();
-                }
-            });
-        }
-
-        function filterAndRenderProducts() {
-            const activeCategory = document.querySelector('.category-link.active').dataset.category;
-            
-            const genderFiltered = allProducts.filter(p => {
-                const title = p.name.toLowerCase();
-                if (gender === 'men') {
-                    return /\bmen|\bunisex\b/i.test(title) && !/\bwomen\b/i.test(title);
-                } else {
-                    return /\bwomen|\bunisex\b/i.test(title);
-                }
-            });
-
-            let categoryFiltered = [];
-            if (activeCategory === 'all') {
-                categoryFiltered = genderFiltered;
-            } else {
-                const normalizedCategory = normalizeString(activeCategory);
-                categoryFiltered = genderFiltered.filter(p => 
-                    (p.tags || []).some(tag => normalizeString(tag) === normalizedCategory)
-                );
-            }
-            renderGrid(categoryFiltered);
-        }
-
-        function renderGrid(products) {
-            const productGrid = document.getElementById("product-grid");
-            productGrid.innerHTML = "";
-            if (products.length === 0) {
-                productGrid.innerHTML = `<p>No products found in this category.</p>`;
-                return;
-            }
-            products.forEach(product => {
-                const cardLink = document.createElement("a");
-                cardLink.className = "card";
-                cardLink.href = `product.html?id=${product.id}`;
-                const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
-                const price = enabledVariants.length > 0 ? `$${(enabledVariants[0].price / 100).toFixed(2)}` : 'N/A';
-
-                cardLink.innerHTML = `
-                    <div class="image-wrapper">
-                        <img src="${product.thumbnail_url}" alt="${product.name}">
-                    </div>
-                    <h3>${product.name}</h3>
-                    <p class="price">${price}</p>
-                `;
-                productGrid.appendChild(cardLink);
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            gender = localStorage.getItem('shopSelection') || 'men';
-            document.body.className = `theme-${gender}`;
-            
-            populateSidebar();
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/products`);
-                allProducts = await response.json();
-                filterAndRenderProducts();
-            } catch (e) {
-                console.error("Failed to load products:", e);
-                document.getElementById("product-grid").innerHTML = `<p>Failed to load products. Check console for details.</p>`;
-            }
-        });
     </script>
 </body>
 </html>
