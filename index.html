@@ -3,83 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maison Maduu & Co.</title>
+    <title>The Collection // Maison Maduu & Co.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #000000;
-            --text-primary: #FFFFFF;
-            --text-secondary: #a1a1a6;
-            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --bg-color: #000000; --text-primary: #FFFFFF; --text-secondary: #a1a1a6;
+            --card-bg: #1c1c1e; --border-color: #3a3a3c; --accent-color: #FFFFFF;
+        }
+        body.theme-women {
+            --bg-color: #F5F5F4; --text-primary: #1C1C1E; --text-secondary: #8A8A8E;
+            --card-bg: #FFFFFF; --border-color: #EAEAEA; --accent-color: #B2844E;
         }
         *, *::before, *::after { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { font-family: var(--font-main); background-color: var(--bg-color); color: var(--text-primary); margin: 0; }
-        
-        .choice-portal {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .split {
-            width: 50%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-size: cover;
-            background-position: center;
-            transition: width 0.8s cubic-bezier(0.86, 0, 0.07, 1);
-            position: relative;
-            text-decoration: none;
-        }
-        .split::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            transition: background-color 0.5s ease;
-        }
-        .choice-portal:hover .split:not(:hover) { width: 40%; }
-        .split:hover { width: 60%; }
-        .split:hover::before { background-color: rgba(0,0,0,0.3); }
-        .men { background-image: url('https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'); }
-        .women { background-image: url('https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2'); }
-        .content {
-            position: relative;
-            z-index: 2;
-            color: white;
-            text-align: center;
-            border: 2px solid white;
-            padding: 2rem 4rem;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            transition: transform 0.5s ease;
-        }
-        .split:hover .content { transform: scale(1.05); }
-        .content h2 { font-size: clamp(2rem, 5vw, 3rem); margin: 0; font-weight: 700; letter-spacing: 1px; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; transition: all 0.5s ease; }
+        .container { max-width: 1440px; margin: 0 auto; padding: 0 2rem; }
+        .main-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); text-align: center; background: var(--bg-color); position: sticky; top: 0; z-index: 50; }
+        .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
+        .shop-layout { display: grid; grid-template-columns: 240px 1fr; gap: 3rem; align-items: flex-start; padding: 4rem 0; }
+        .sidebar { position: sticky; top: 100px; }
+        .sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
+        .sidebar-nav .group-title { font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 2rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
+        .sidebar-nav .group-title:first-child { margin-top: 0; }
+        .sidebar-nav a { display: block; text-decoration: none; color: var(--text-primary); padding: 0.6rem 0; font-size: 1.1rem; transition: color 0.2s ease; }
+        .sidebar-nav a:hover { color: var(--accent-color); }
+        .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+        .card { text-decoration: none; color: var(--text-primary); text-align: center; }
+        .card .image-wrapper { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card:hover .image-wrapper { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
+        .card p { font-size: 1rem; color: var(--text-secondary); margin: 0; }
     </style>
 </head>
 <body>
-    <div class="choice-portal">
-        <a href="shop.html" class="split men" onclick="setGenderTheme('men')">
-            <div class="content">
-                <h2>Shop Men</h2>
-            </div>
-        </a>
-        <a href="shop.html" class="split women" onclick="setGenderTheme('women')">
-            <div class="content">
-                <h2>Shop Women</h2>
-            </div>
-        </a>
+    <header class="main-header">
+        <a href="index.html" class="nav-brand">Maison Maduu & Co.</a>
+    </header>
+    <div class="container">
+        <div class="shop-layout">
+            <aside class="sidebar">
+                <nav class="sidebar-nav" id="sidebar-nav"></nav>
+            </aside>
+            <main id="shop-main">
+                <div class="product-grid" id="product-grid"><p>Loading Collection...</p></div>
+            </main>
+        </div>
     </div>
     <script>
-        function setGenderTheme(gender) {
-            localStorage.setItem('shopSelection', gender);
+        const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
+        let allProducts = [];
+        let gender = 'men';
+
+        const CATEGORIES = {
+            men: { "All Men's Clothing": [], "Shirts": ["T-shirts", "All-over shirts", "Polo shirts", "Tank tops", "3/4 sleeve shirts", "Long sleeve shirts", "Embroidered shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts", "Hoodies", "Sweatshirts", "Knitwear"], "Bottoms": ["Sweatpants & joggers", "Underwear", "Leggings", "Shorts", "Pants"] },
+            women: { "All Women's Clothing": [], "Tops": ["T-shirts", "Polo shirts", "All-over shirts", "Tank tops", "Crop tops", "Embroidered shirts", "3/4 sleeve shirts", "Long sleeve shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts"], "Dresses & Skirts": ["Dresses", "Skirts"], "Bottoms": ["Custom women's sweatpants & joggers", "Leggings", "Shorts", "Pants"], "Activewear": ["Sports bras", "Swimwear", "Sleepwear"] }
+        };
+
+        function populateSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            const genderCategories = CATEGORIES[gender];
+            let navHTML = '<ul>';
+            for (const group in genderCategories) {
+                if (group.startsWith("All")) {
+                    navHTML += `<li><a href="#" class="category-link active" data-category="all">${group}</a></li>`;
+                } else {
+                    navHTML += `<li class="group-title">${group}</li>`;
+                    genderCategories[group].forEach(keyword => {
+                        navHTML += `<li><a href="#" class="category-link" data-category="${keyword}">${keyword}</a></li>`;
+                    });
+                }
+            }
+            navHTML += '</ul>';
+            nav.innerHTML = navHTML;
+
+            nav.addEventListener('click', e => {
+                e.preventDefault();
+                if (e.target.classList.contains('category-link')) {
+                    document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
+                    e.target.classList.add('active');
+                    filterAndRenderProducts();
+                }
+            });
         }
+
+        function filterAndRenderProducts() {
+            const activeCategory = document.querySelector('.category-link.active').dataset.category;
+            
+            const genderFiltered = allProducts.filter(p => {
+                const title = p.name.toLowerCase();
+                if (gender === 'men') {
+                    return /\bmen|\bunisex\b/i.test(title) && !/\bwomen\b/i.test(title);
+                } else { // women
+                    return /\bwomen|\bunisex\b/i.test(title);
+                }
+            });
+
+            let categoryFiltered = [];
+            if (activeCategory === 'all') {
+                categoryFiltered = genderFiltered;
+            } else {
+                categoryFiltered = genderFiltered.filter(p => (p.tags || []).some(tag => tag.toLowerCase() === activeCategory.toLowerCase()));
+            }
+            renderGrid(categoryFiltered);
+        }
+
+        function renderGrid(products) {
+            const productGrid = document.getElementById("product-grid");
+            productGrid.innerHTML = "";
+            if (products.length === 0) {
+                productGrid.innerHTML = `<p>No products found in this category.</p>`;
+                return;
+            }
+            products.forEach(product => {
+                const cardLink = document.createElement("a");
+                cardLink.className = "card";
+                cardLink.href = `product.html?id=${product.id}`;
+                // Get starting price from first enabled variant
+                const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
+                const price = enabledVariants.length > 0 ? `$${(enabledVariants[0].price / 100).toFixed(2)}` : 'N/A';
+
+                cardLink.innerHTML = `
+                    <div class="image-wrapper">
+                        <img src="${product.thumbnail_url}" alt="${product.name}">
+                    </div>
+                    <h3>${product.name}</h3>
+                    <p class="price">${price}</p>
+                `;
+                productGrid.appendChild(cardLink);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            gender = localStorage.getItem('shopSelection') || 'men';
+            document.body.className = `theme-${gender}`;
+            
+            populateSidebar();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products`);
+                allProducts = await response.json();
+                filterAndRenderProducts();
+            } catch (e) {
+                document.getElementById("product-grid").innerHTML = `<p>Failed to load products.</p>`;
+            }
+        });
     </script>
 </body>
 </html>
