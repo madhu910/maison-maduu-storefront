@@ -32,22 +32,31 @@
         .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
         
-        /* --- Card and Hover Gallery Styles --- */
+        /* --- Styles for Card and Hover Gallery --- */
         .card { text-decoration: none; color: var(--text-primary); text-align: center; }
         .card .image-wrapper { 
             background-color: var(--card-bg); border: 1px solid var(--border-color);
             border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem;
-            position: relative; /* Needed for positioning images */
+            position: relative;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .card:hover .image-wrapper { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        
+        /* --- YOUR UPGRADED CSS FOR SMOOTH FADES --- */
         .card .image-wrapper img {
-            width: 100%; aspect-ratio: 1/1; object-fit: cover;
-            position: absolute; top: 0; left: 0;
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            position: absolute;
+            top: 0; left: 0;
             opacity: 0;
-            transition: opacity 0.4s ease-in-out;
+            transition: opacity 0.5s ease-in-out;
         }
-        .card .image-wrapper img.active { opacity: 1; }
+        .card .image-wrapper img.active {
+            opacity: 1;
+            z-index: 2;
+        }
+
         .card h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
         .card p { font-size: 1rem; color: var(--text-secondary); margin: 0; }
     </style>
@@ -80,6 +89,7 @@
         function populateSidebar() { /* Unchanged */ }
         function filterAndRenderProducts() { /* Unchanged */ }
 
+        // --- YOUR UPGRADED RENDERGRID FUNCTION ---
         function renderGrid(products) {
             const productGrid = document.getElementById("product-grid");
             productGrid.innerHTML = "";
@@ -87,6 +97,7 @@
                 productGrid.innerHTML = `<p>No products found in this category.</p>`;
                 return;
             }
+
             products.forEach(product => {
                 const cardLink = document.createElement("a");
                 cardLink.className = "card";
@@ -103,56 +114,57 @@
                 `;
                 productGrid.appendChild(cardLink);
 
-                // --- NEW LAZY-LOADING HOVER LOGIC ---
                 const imageWrapper = document.getElementById(`wrapper-${product.id}`);
                 let imageInterval;
 
                 imageWrapper.addEventListener('mouseenter', async () => {
-                    // Check if we've already loaded the images
-                    if (imageWrapper.dataset.loaded) {
-                        startImageCycle(imageWrapper);
-                        return;
-                    }
+                    if (imageWrapper.dataset.loaded !== "true") {
+                        try {
+                            const res = await fetch(`${API_BASE_URL}/api/products/${product.id}`);
+                            const fullProduct = await res.json();
+                            
+                            const uniqueImages = [...new Map(
+                                fullProduct.sync_variants
+                                .flatMap(v => v.files.filter(f => f.type === 'preview'))
+                                .map(item => [item.url, item.url])
+                            ).values()];
 
-                    // Fetch full details ONCE on the first hover
-                    try {
-                        const res = await fetch(`${API_BASE_URL}/api/products/${product.id}`);
-                        const fullProduct = await res.json();
-                        const uniqueImages = [...new Map(fullProduct.sync_variants
-                            .flatMap(v => v.files.filter(f => f.type === 'preview'))
-                            .map(item => [item.url, item.url])).values()];
-                        
-                        // Add the new images to the wrapper (hidden by default)
-                        uniqueImages.slice(1).forEach(url => {
-                            const img = document.createElement('img');
-                            img.src = url;
-                            img.alt = product.name;
-                            imageWrapper.appendChild(img);
-                        });
+                            uniqueImages.slice(1).forEach(url => {
+                                const img = document.createElement("img");
+                                img.src = url;
+                                img.alt = product.name;
+                                imageWrapper.appendChild(img);
+                            });
 
-                        imageWrapper.dataset.loaded = 'true'; // Mark as loaded
-                        startImageCycle(imageWrapper);
-                    } catch (err) {
-                        console.error("Could not load extra images for card:", err);
+                            imageWrapper.dataset.loaded = "true";
+                        } catch (err) {
+                            console.error("Image fetch failed:", err);
+                        }
                     }
+                    startImageCycle(imageWrapper);
                 });
 
                 imageWrapper.addEventListener('mouseleave', () => {
-                    clearInterval(imageInterval);
-                    // Reset to the first image
-                    const images = imageWrapper.querySelectorAll('img');
-                    images.forEach((img, idx) => img.classList.toggle('active', idx === 0));
+                    stopImageCycle(imageWrapper);
                 });
-                
+
                 const startImageCycle = (wrapper) => {
-                    const images = wrapper.querySelectorAll('img');
+                    const images = wrapper.querySelectorAll("img");
                     if (images.length < 2) return;
+
                     let currentIndex = 0;
+                    clearInterval(imageInterval); // prevent multiple timers
                     imageInterval = setInterval(() => {
-                        images[currentIndex].classList.remove('active');
+                        images[currentIndex].classList.remove("active");
                         currentIndex = (currentIndex + 1) % images.length;
-                        images[currentIndex].classList.add('active');
-                    }, 800); // Cycle every 0.8 seconds
+                        images[currentIndex].classList.add("active");
+                    }, 1000); // cycle every second
+                };
+
+                const stopImageCycle = (wrapper) => {
+                    clearInterval(imageInterval);
+                    const images = wrapper.querySelectorAll("img");
+                    images.forEach((img, idx) => img.classList.toggle("active", idx === 0));
                 };
             });
         }
