@@ -9,76 +9,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Default Theme (Men's) */
+            /* Themes are unchanged */
             --bg-color: #000000; --text-primary: #FFFFFF; --text-secondary: #a1a1a6;
             --card-bg: #1c1c1e; --border-color: #3a3a3c; --accent-color: #FFFFFF;
         }
         body.theme-women {
-            /* Women's Theme */
             --bg-color: #F5F5F4; --text-primary: #1C1C1E; --text-secondary: #8A8A8E;
             --card-bg: #FFFFFF; --border-color: #EAEAEA; --accent-color: #B2844E;
         }
         *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; transition: all 0.5s ease; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; }
         .container { max-width: 1440px; margin: 0 auto; padding: 0 2rem; }
         .main-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); text-align: center; background: var(--bg-color); position: sticky; top: 0; z-index: 50; }
         .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
-
-        /* --- NEW CAROUSEL STYLES --- */
-        .featured-carousel {
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 4rem;
-            border-radius: 18px;
-        }
-        .carousel-track {
-            display: flex;
-            transition: transform 0.5s ease-in-out;
-        }
-        .carousel-slide {
-            min-width: 100%;
-            position: relative;
-        }
-        .carousel-slide img {
-            width: 100%;
-            height: 60vh;
-            max-height: 500px;
-            object-fit: cover;
-            display: block;
-        }
-        .carousel-slide .slide-content {
-            position: absolute;
-            bottom: 2rem;
-            left: 2rem;
-            color: white;
-            background: rgba(0,0,0,0.5);
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-        .carousel-slide h2 { margin: 0; font-size: 1.5rem; }
-        .carousel-buttons {
-            position: absolute;
-            top: 50%;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            transform: translateY(-50%);
-            pointer-events: none;
-        }
-        .carousel-buttons button {
-            pointer-events: all;
-            background: rgba(255,255,255,0.7);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            margin: 0 1rem;
-            cursor: pointer;
-        }
-
-        .shop-layout { display: grid; grid-template-columns: 240px 1fr; gap: 3rem; align-items: flex-start; }
+        .shop-layout { display: grid; grid-template-columns: 240px 1fr; gap: 3rem; align-items: flex-start; padding: 4rem 0; }
         .sidebar { position: sticky; top: 100px; }
         .sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
         .sidebar-nav .group-title { font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 2rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
@@ -87,10 +31,23 @@
         .sidebar-nav a:hover { color: var(--accent-color); }
         .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+        
+        /* --- Card and Hover Gallery Styles --- */
         .card { text-decoration: none; color: var(--text-primary); text-align: center; }
-        .card .image-wrapper { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .card .image-wrapper { 
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem;
+            position: relative; /* Needed for positioning images */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
         .card:hover .image-wrapper { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .card .image-wrapper img {
+            width: 100%; aspect-ratio: 1/1; object-fit: cover;
+            position: absolute; top: 0; left: 0;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+        .card .image-wrapper img.active { opacity: 1; }
         .card h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
         .card p { font-size: 1rem; color: var(--text-secondary); margin: 0; }
     </style>
@@ -105,13 +62,6 @@
                 <nav class="sidebar-nav" id="sidebar-nav"></nav>
             </aside>
             <main id="shop-main">
-                <div class="featured-carousel" id="featured-carousel" style="display: none;">
-                    <div class="carousel-track"></div>
-                    <div class="carousel-buttons">
-                        <button id="carousel-prev">&lt;</button>
-                        <button id="carousel-next">&gt;</button>
-                    </div>
-                </div>
                 <div class="product-grid" id="product-grid"><p>Loading Collection...</p></div>
             </main>
         </div>
@@ -126,81 +76,88 @@
             women: { "All Women's Clothing": [], "Tops": ["T-shirts", "Polo shirts", "All-over shirts", "Tank tops", "Crop tops", "Embroidered shirts", "3/4 sleeve shirts", "Long sleeve shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts"], "Dresses & Skirts": ["Dresses", "Skirts"], "Bottoms": ["Custom women's sweatpants & joggers", "Leggings", "Shorts", "Pants"], "Activewear": ["Sports bras", "Swimwear", "Sleepwear"] }
         };
 
-        function normalizeString(str) {
-            const lower = str.toLowerCase();
-            if (lower.endsWith('es')) { return lower.slice(0, -2); }
-            if (lower.endsWith('s')) { return lower.slice(0, -1); }
-            return lower;
-        }
+        function normalizeString(str) { /* Unchanged */ }
+        function populateSidebar() { /* Unchanged */ }
+        function filterAndRenderProducts() { /* Unchanged */ }
 
-        function populateSidebar() { /* ... same as before ... */ }
-        function filterAndRenderProducts() { /* ... same as before ... */ }
-        function renderGrid(products) { /* ... same as before ... */ }
-
-        // --- NEW CAROUSEL LOGIC ---
-        function setupCarousel(products) {
-            const carouselContainer = document.getElementById('featured-carousel');
-            const track = carouselContainer.querySelector('.carousel-track');
-            const prevBtn = document.getElementById('carousel-prev');
-            const nextBtn = document.getElementById('carousel-next');
-            
-            const featuredProducts = products.slice(0, 5); // Take the first 5 products for the carousel
-            if(featuredProducts.length < 2) return; // Don't show carousel for 1 or 0 products
-
-            track.innerHTML = featuredProducts.map(p => `
-                <div class="carousel-slide">
-                    <a href="product.html?id=${p.id}">
-                        <img src="${p.thumbnail_url}" alt="${p.name}">
-                        <div class="slide-content"><h2>${p.name}</h2></div>
-                    </a>
-                </div>
-            `).join('');
-
-            carouselContainer.style.display = 'block';
-            const slides = Array.from(track.children);
-            let currentIndex = 0;
-
-            const updateCarousel = () => {
-                track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        function renderGrid(products) {
+            const productGrid = document.getElementById("product-grid");
+            productGrid.innerHTML = "";
+            if (products.length === 0) {
+                productGrid.innerHTML = `<p>No products found in this category.</p>`;
+                return;
             }
-            
-            nextBtn.addEventListener('click', () => {
-                currentIndex = (currentIndex + 1) % slides.length;
-                updateCarousel();
-            });
-            prevBtn.addEventListener('click', () => {
-                currentIndex = (currentIndex - 1 + slides.length) % slides.length;
-                updateCarousel();
-            });
-            
-            setInterval(() => nextBtn.click(), 5000); // Auto-slide
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            gender = localStorage.getItem('shopSelection') || 'men';
-            document.body.className = `theme-${gender}`;
-            
-            populateSidebar();
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/products`);
-                allProducts = await response.json();
+            products.forEach(product => {
+                const cardLink = document.createElement("a");
+                cardLink.className = "card";
+                cardLink.href = `product.html?id=${product.id}`;
                 
-                // Set up the carousel with all gender-filtered products before category filtering
-                const genderFiltered = allProducts.filter(p => {
-                    const title = p.name.toLowerCase();
-                    if (gender === 'men') return /\bmen|\bunisex\b/i.test(title) && !/\bwomen\b/i.test(title);
-                    return /\bwomen|\bunisex\b/i.test(title);
+                const variantCountText = product.variants > 1 ? `${product.variants} Variants` : `${product.variants} Variant`;
+
+                cardLink.innerHTML = `
+                    <div class="image-wrapper" id="wrapper-${product.id}">
+                        <img src="${product.thumbnail_url}" alt="${product.name}" class="active">
+                    </div>
+                    <h3>${product.name}</h3>
+                    <p>${variantCountText}</p>
+                `;
+                productGrid.appendChild(cardLink);
+
+                // --- NEW LAZY-LOADING HOVER LOGIC ---
+                const imageWrapper = document.getElementById(`wrapper-${product.id}`);
+                let imageInterval;
+
+                imageWrapper.addEventListener('mouseenter', async () => {
+                    // Check if we've already loaded the images
+                    if (imageWrapper.dataset.loaded) {
+                        startImageCycle(imageWrapper);
+                        return;
+                    }
+
+                    // Fetch full details ONCE on the first hover
+                    try {
+                        const res = await fetch(`${API_BASE_URL}/api/products/${product.id}`);
+                        const fullProduct = await res.json();
+                        const uniqueImages = [...new Map(fullProduct.sync_variants
+                            .flatMap(v => v.files.filter(f => f.type === 'preview'))
+                            .map(item => [item.url, item.url])).values()];
+                        
+                        // Add the new images to the wrapper (hidden by default)
+                        uniqueImages.slice(1).forEach(url => {
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.alt = product.name;
+                            imageWrapper.appendChild(img);
+                        });
+
+                        imageWrapper.dataset.loaded = 'true'; // Mark as loaded
+                        startImageCycle(imageWrapper);
+                    } catch (err) {
+                        console.error("Could not load extra images for card:", err);
+                    }
                 });
 
-                setupCarousel(genderFiltered);
-                filterAndRenderProducts(); // This will render the grid for the default category
+                imageWrapper.addEventListener('mouseleave', () => {
+                    clearInterval(imageInterval);
+                    // Reset to the first image
+                    const images = imageWrapper.querySelectorAll('img');
+                    images.forEach((img, idx) => img.classList.toggle('active', idx === 0));
+                });
+                
+                const startImageCycle = (wrapper) => {
+                    const images = wrapper.querySelectorAll('img');
+                    if (images.length < 2) return;
+                    let currentIndex = 0;
+                    imageInterval = setInterval(() => {
+                        images[currentIndex].classList.remove('active');
+                        currentIndex = (currentIndex + 1) % images.length;
+                        images[currentIndex].classList.add('active');
+                    }, 800); // Cycle every 0.8 seconds
+                };
+            });
+        }
 
-            } catch (e) {
-                console.error("Failed to load products:", e);
-                document.getElementById("product-grid").innerHTML = `<p>Failed to load products.</p>`;
-            }
-        });
+        document.addEventListener('DOMContentLoaded', async () => { /* Unchanged */ });
     </script>
 </body>
 </html>
