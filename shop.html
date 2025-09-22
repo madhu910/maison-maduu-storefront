@@ -9,11 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Themes are unchanged */
+            /* Default Theme (Men's) */
             --bg-color: #000000; --text-primary: #FFFFFF; --text-secondary: #a1a1a6;
             --card-bg: #1c1c1e; --border-color: #3a3a3c; --accent-color: #FFFFFF;
         }
         body.theme-women {
+            /* Women's Theme */
             --bg-color: #F5F5F4; --text-primary: #1C1C1E; --text-secondary: #8A8A8E;
             --card-bg: #FFFFFF; --border-color: #EAEAEA; --accent-color: #B2844E;
         }
@@ -31,8 +32,6 @@
         .sidebar-nav a:hover { color: var(--accent-color); }
         .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
-        
-        /* --- Styles for Card and Hover Gallery --- */
         .card { text-decoration: none; color: var(--text-primary); text-align: center; }
         .card .image-wrapper { 
             background-color: var(--card-bg); border: 1px solid var(--border-color);
@@ -41,22 +40,13 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         .card:hover .image-wrapper { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        
-        /* --- YOUR UPGRADED CSS FOR SMOOTH FADES --- */
         .card .image-wrapper img {
-            width: 100%;
-            aspect-ratio: 1/1;
-            object-fit: cover;
-            position: absolute;
-            top: 0; left: 0;
+            width: 100%; aspect-ratio: 1/1; object-fit: cover;
+            position: absolute; top: 0; left: 0;
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
         }
-        .card .image-wrapper img.active {
-            opacity: 1;
-            z-index: 2;
-        }
-
+        .card .image-wrapper img.active { opacity: 1; z-index: 2; }
         .card h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
         .card p { font-size: 1rem; color: var(--text-secondary); margin: 0; }
     </style>
@@ -84,12 +74,67 @@
             men: { "All Men's Clothing": [], "Shirts": ["T-shirts", "All-over shirts", "Polo shirts", "Tank tops", "3/4 sleeve shirts", "Long sleeve shirts", "Embroidered shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts", "Hoodies", "Sweatshirts", "Knitwear"], "Bottoms": ["Sweatpants & joggers", "Underwear", "Leggings", "Shorts", "Pants"] },
             women: { "All Women's Clothing": [], "Tops": ["T-shirts", "Polo shirts", "All-over shirts", "Tank tops", "Crop tops", "Embroidered shirts", "3/4 sleeve shirts", "Long sleeve shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts"], "Dresses & Skirts": ["Dresses", "Skirts"], "Bottoms": ["Custom women's sweatpants & joggers", "Leggings", "Shorts", "Pants"], "Activewear": ["Sports bras", "Swimwear", "Sleepwear"] }
         };
+        
+        function normalizeString(str) {
+            const lower = str.toLowerCase();
+            if (lower.endsWith('es')) { return lower.slice(0, -2); }
+            if (lower.endsWith('s')) { return lower.slice(0, -1); }
+            return lower;
+        }
 
-        function normalizeString(str) { /* Unchanged */ }
-        function populateSidebar() { /* Unchanged */ }
-        function filterAndRenderProducts() { /* Unchanged */ }
+        function populateSidebar() {
+            const nav = document.getElementById('sidebar-nav');
+            const genderCategories = CATEGORIES[gender];
+            let navHTML = '<ul>';
+            for (const group in genderCategories) {
+                if (group.startsWith("All")) {
+                     navHTML += `<li><a href="#" class="category-link active" data-category="all">${group}</a></li>`;
+                } else {
+                    navHTML += `<li class="group-title">${group}</li>`;
+                    genderCategories[group].forEach(keyword => {
+                        navHTML += `<li><a href="#" class="category-link" data-category="${keyword}">${keyword}</a></li>`;
+                    });
+                }
+            }
+            navHTML += '</ul>';
+            nav.innerHTML = navHTML;
 
-        // --- YOUR UPGRADED RENDERGRID FUNCTION ---
+            nav.addEventListener('click', e => {
+                e.preventDefault();
+                if (e.target.classList.contains('category-link')) {
+                    document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
+                    e.target.classList.add('active');
+                    filterAndRenderProducts();
+                }
+            });
+        }
+
+        function filterAndRenderProducts() {
+            const activeCategory = document.querySelector('.category-link.active').dataset.category;
+            
+            const genderFiltered = allProducts.filter(p => {
+                const title = p.name.toLowerCase();
+                if (gender === 'men') {
+                    return /\bmen|\bunisex\b/i.test(title) && !/\bwomen\b/i.test(title);
+                } else {
+                    return /\bwomen|\bunisex\b/i.test(title);
+                }
+            });
+
+            let categoryFiltered = [];
+            if (activeCategory === 'all') {
+                categoryFiltered = genderFiltered;
+            } else {
+                categoryFiltered = genderFiltered.filter(p => {
+                    const normalizedCategory = normalizeString(activeCategory);
+                    const inTags = (p.tags || []).some(tag => normalizeString(tag) === normalizedCategory);
+                    const inName = p.name.toLowerCase().includes(normalizedCategory);
+                    return inTags || inName;
+                });
+            }
+            renderGrid(categoryFiltered);
+        }
+
         function renderGrid(products) {
             const productGrid = document.getElementById("product-grid");
             productGrid.innerHTML = "";
@@ -124,7 +169,7 @@
                             const fullProduct = await res.json();
                             
                             const uniqueImages = [...new Map(
-                                fullProduct.sync_variants
+                                (fullProduct.sync_variants || [])
                                 .flatMap(v => v.files.filter(f => f.type === 'preview'))
                                 .map(item => [item.url, item.url])
                             ).values()];
@@ -153,12 +198,12 @@
                     if (images.length < 2) return;
 
                     let currentIndex = 0;
-                    clearInterval(imageInterval); // prevent multiple timers
+                    clearInterval(imageInterval);
                     imageInterval = setInterval(() => {
                         images[currentIndex].classList.remove("active");
                         currentIndex = (currentIndex + 1) % images.length;
                         images[currentIndex].classList.add("active");
-                    }, 1000); // cycle every second
+                    }, 1000);
                 };
 
                 const stopImageCycle = (wrapper) => {
@@ -169,7 +214,21 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', async () => { /* Unchanged */ });
+        document.addEventListener('DOMContentLoaded', async () => {
+            gender = localStorage.getItem('shopSelection') || 'men';
+            document.body.className = `theme-${gender}`;
+            
+            populateSidebar();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products`);
+                allProducts = await response.json();
+                filterAndRenderProducts();
+            } catch (e) {
+                console.error("Failed to load products:", e);
+                document.getElementById("product-grid").innerHTML = `<p>Failed to load products. Check console for details.</p>`;
+            }
+        });
     </script>
 </body>
 </html>
