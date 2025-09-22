@@ -32,12 +32,41 @@
         .sidebar-nav a:hover { color: var(--accent-color); }
         .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+        
+        /* --- ENHANCED CARD STYLES --- */
         .card { text-decoration: none; color: var(--text-primary); text-align: center; }
-        .card .image-wrapper { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .card:hover .image-wrapper { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        .card h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
+        .card .image-wrapper { 
+            background-color: var(--card-bg); 
+            border: 1px solid var(--border-color);
+            border-radius: 18px; 
+            overflow: hidden; 
+            margin-bottom: 1.5rem; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+        }
+        .card:hover .image-wrapper { 
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2); 
+        }
+        .card img { 
+            width: 100%; 
+            aspect-ratio: 1/1; 
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .card:hover img {
+             transform: scale(1.1);
+        }
+        .card h3 { 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            margin: 0.5rem 0;
+            transition: color 0.3s ease;
+        }
+        .card:hover h3 {
+            color: var(--accent-color);
+        }
         .card p { font-size: 1rem; color: var(--text-secondary); margin: 0; }
+
     </style>
 </head>
 <body>
@@ -114,12 +143,10 @@
             if (activeCategory === 'all') {
                 categoryFiltered = genderFiltered;
             } else {
-                categoryFiltered = genderFiltered.filter(p => {
-                    const normalizedCategory = normalizeString(activeCategory);
-                    const inTags = (p.tags || []).some(tag => normalizeString(tag) === normalizedCategory);
-                    const inName = p.name.toLowerCase().includes(normalizedCategory);
-                    return inTags || inName;
-                });
+                const normalizedCategory = normalizeString(activeCategory);
+                categoryFiltered = genderFiltered.filter(p => 
+                    (p.tags || []).some(tag => normalizeString(tag) === normalizedCategory)
+                );
             }
             renderGrid(categoryFiltered);
         }
@@ -135,9 +162,8 @@
                 const cardLink = document.createElement("a");
                 cardLink.className = "card";
                 cardLink.href = `product.html?id=${product.id}`;
-
-                // CORRECTED: The API provides 'variants' as a number count on this endpoint.
-                const variantCount = product.variants || 0;
+                
+                const variantCount = product.variants;
                 const variantCountText = variantCount > 1 ? `${variantCount} Variants` : `${variantCount} Variant`;
 
                 cardLink.innerHTML = `
