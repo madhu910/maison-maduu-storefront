@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
     <style>
         :root {
             --bg-color: #ffffff; --text-primary: #1d1d1f; --text-secondary: #6e6e73;
@@ -21,7 +20,7 @@
         .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
         .product-page { display: grid; grid-template-columns: 1.5fr 1fr; gap: 4rem; padding: 6rem 0; align-items: start; }
         .product-gallery .main-image { margin-bottom: 1rem; }
-        .product-gallery .main-image img { width: 100%; border-radius: 18px; background-color: var(--pill-bg); }
+        .product-gallery .main-image img { width: 100%; border-radius: 18px; background-color: var(--pill-bg); border: 1px solid var(--border-color); }
         .thumbnail-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
         .thumbnail { border-radius: 12px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s ease; }
         .thumbnail img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -34,108 +33,119 @@
         .pill-container { display: flex; flex-wrap: wrap; gap: 0.75rem; }
         .pill { padding: 0.75rem 1.5rem; border: 1px solid var(--border-color); border-radius: 50px; cursor: pointer; transition: all 0.2s ease; }
         .pill.active { border-color: var(--accent-color); color: var(--accent-color); box-shadow: 0 0 0 1px var(--accent-color); }
-        .pill.disabled { opacity: 0.4; cursor: not-allowed; }
         .buy-now { width: 100%; background-color: var(--accent-color); color: white; font-size: 1.2rem; font-weight: 600; padding: 1.2rem; border-radius: 12px; border: none; cursor: pointer; transition: opacity 0.2s ease; }
         .buy-now:hover { opacity: 0.8; }
-        [v-cloak] { display: none; }
     </style>
 </head>
 <body>
     <header class="main-header">
         <a href="index.html" class="nav-brand">Maison Maduu & Co.</a>
     </header>
-    <div id="app" class="container" v-cloak>
-        <main v-if="product" class="product-page">
-            <div class="product-gallery">
-                <div class="main-image">
-                    <img :src="mainImage" :alt="product.sync_product.name">
-                </div>
-                <div class="thumbnail-grid">
-                    <div class="thumbnail" v-for="image in uniqueMockups" :key="image.url" @click="mainImage = image.url" :class="{ active: image.url === mainImage }">
-                        <img :src="image.url" alt="Product Thumbnail">
-                    </div>
-                </div>
-            </div>
-            <div class="product-info">
-                <h1>{{ product.sync_product.name }}</h1>
-                <p class="price">{{ formattedPrice }}</p>
-                <div v-if="sizes.length > 0" class="option-group">
-                    <label>Size</label>
-                    <div class="pill-container">
-                         <div v-for="size in sizes" :key="size" class="pill" :class="{ active: size === selectedSize }" @click="selectedSize = size">
-                              {{ size }}
-                         </div>
-                    </div>
-                </div>
-                <button class="buy-now">Acquire</button>
-                <div class="description" v-html="formattedDescription"></div>
-            </div>
-        </main>
+    <div class="container" id="product-page-container">
+        <p>Loading Product...</p>
     </div>
 
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
-        new Vue({
-            el: '#app',
-            data: { product: null, selectedSize: null, mainImage: '' },
-            computed: {
-                // Gets all unique preview images from all variants
-                uniqueMockups() {
-                    if (!this.product?.sync_variants) return [];
-                    const mockups = this.product.sync_variants
-                        .flatMap(variant => variant.files.filter(file => file.type === 'preview'))
-                        .map(file => ({ url: file.preview_url }));
-                    return [...new Map(mockups.map(item => [item.url, item])).values()];
-                },
-                // Gets all unique sizes from all variants
-                sizes() {
-                    if (!this.product?.sync_variants) return [];
-                    const allSizes = this.product.sync_variants.map(v => v.size);
-                    return [...new Set(allSizes)];
-                },
-                // Finds the specific variant that matches the selected size
-                selectedVariant() {
-                    if (!this.product || !this.selectedSize) return null;
-                    return this.product.sync_variants.find(v => v.size === this.selectedSize);
-                },
-                // Formats the price for display
-                formattedPrice() {
-                    if (this.selectedVariant) return `$${this.selectedVariant.retail_price}`;
-                    if (this.product?.sync_variants?.[0]) return `From $${this.product.sync_variants[0].retail_price}`;
-                    return 'Select an option';
-                },
-                // Formats the description
-                formattedDescription() {
-                    return this.product?.sync_product?.description?.replace(/\n/g, '<br>') || '';
-                }
-            },
-            methods: {
-                async fetchProduct(productId) {
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
-                        const data = await response.json();
-                        this.product = data;
-                        
-                        // Set initial selections
-                        this.mainImage = this.uniqueMockups[0]?.url;
-                        this.selectedSize = this.sizes[0];
-                    } catch (e) { console.error("Failed to load product", e); }
-                }
-            },
-            watch: {
-                // When the selected variant changes, update the main image
-                selectedVariant(newVariant) {
-                    if (newVariant) {
-                        const imageForVariant = (newVariant.files || []).find(f => f.type === 'preview');
-                        if (imageForVariant) this.mainImage = imageForVariant.preview_url;
-                    }
-                }
-            },
-            created() {
-                const params = new URLSearchParams(window.location.search);
-                this.fetchProduct(params.get('id'));
+        
+        async function renderProductPage() {
+            const container = document.getElementById('product-page-container');
+            const params = new URLSearchParams(window.location.search);
+            const productId = params.get('id');
+
+            if (!productId) {
+                container.innerHTML = `<p>Error: No product ID specified.</p>`;
+                return;
             }
-        });
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
+                const data = await response.json();
+                const product = data.sync_product;
+                const variants = data.sync_variants;
+
+                document.title = `${product.name} // Maison Maduu & Co.`;
+
+                // --- Build Page ---
+                let sizesHTML = '';
+                const uniqueSizes = [...new Set(variants.map(v => v.size))];
+                uniqueSizes.forEach(size => {
+                    sizesHTML += `<div class="pill" data-size="${size}">${size}</div>`;
+                });
+
+                container.innerHTML = `
+                    <main class="product-page">
+                        <div class="product-gallery">
+                            <div class="main-image">
+                                <img src="${product.thumbnail_url}" alt="${product.name}" id="main-image">
+                            </div>
+                            <div class="thumbnail-grid" id="thumbnail-grid"></div>
+                        </div>
+                        <div class="product-info">
+                            <h1>${product.name}</h1>
+                            <p class="price" id="price-display">$${variants[0].retail_price}</p>
+                            <div class="option-group">
+                                <label>Size</label>
+                                <div class="pill-container" id="size-pills">${sizesHTML}</div>
+                            </div>
+                            <button class="buy-now">Acquire</button>
+                            <div class="description">${product.description.replace(/\n/g, '<br>')}</div>
+                        </div>
+                    </main>`;
+
+                // --- Add Logic ---
+                const mainImage = document.getElementById('main-image');
+                const thumbnailGrid = document.getElementById('thumbnail-grid');
+                const sizePills = document.getElementById('size-pills');
+                const priceDisplay = document.getElementById('price-display');
+
+                // Populate thumbnails
+                const uniqueMockups = [...new Map(variants.flatMap(v => v.files.filter(f => f.type === 'preview')).map(item => [item.preview_url, item.preview_url])).values()];
+                uniqueMockups.forEach(url => {
+                    thumbnailGrid.innerHTML += `
+                        <div class="thumbnail">
+                            <img src="${url}" alt="Thumbnail">
+                        </div>`;
+                });
+
+                // Thumbnail click logic
+                thumbnailGrid.addEventListener('click', e => {
+                    if (e.target.tagName === 'IMG') {
+                        mainImage.src = e.target.src;
+                        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+                        e.target.parentElement.classList.add('active');
+                    }
+                });
+
+                // Size selection logic
+                sizePills.addEventListener('click', e => {
+                    if (e.target.classList.contains('pill')) {
+                        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+                        e.target.classList.add('active');
+                        
+                        const selectedSize = e.target.dataset.size;
+                        const variant = variants.find(v => v.size === selectedSize);
+                        if (variant) {
+                            priceDisplay.textContent = `$${variant.retail_price}`;
+                        }
+                    }
+                });
+                
+                // Set initial active state
+                if (thumbnailGrid.querySelector('.thumbnail')) {
+                    thumbnailGrid.querySelector('.thumbnail').classList.add('active');
+                }
+                if (sizePills.querySelector('.pill')) {
+                    sizePills.querySelector('.pill').classList.add('active');
+                }
+
+            } catch (e) {
+                console.error("Failed to render product page:", e);
+                container.innerHTML = `<p>Error loading product details.</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', renderProductPage);
     </script>
 </body>
 </html>
