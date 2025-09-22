@@ -102,8 +102,9 @@
             const genderFiltered = allProducts.filter(p => {
                 const title = p.name.toLowerCase();
                 if (gender === 'men') {
+                    // This regex ensures it matches "men" or "unisex" as whole words and NOT "women"
                     return /\bmen|\bunisex\b/i.test(title) && !/\bwomen\b/i.test(title);
-                } else {
+                } else { // women
                     return /\bwomen|\bunisex\b/i.test(title);
                 }
             });
@@ -131,15 +132,17 @@
                 const cardLink = document.createElement("a");
                 cardLink.className = "card";
                 cardLink.href = `product.html?id=${product.id}`;
-                const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
-                const price = enabledVariants.length > 0 ? `$${(enabledVariants[0].price / 100).toFixed(2)}` : 'N/A';
+                
+                // --- THIS IS THE CORRECTED LOGIC ---
+                // The list endpoint provides 'variants' as a number (count)
+                const variantCountText = product.variants > 1 ? `${product.variants} Variants` : `${product.variants} Variant`;
 
                 cardLink.innerHTML = `
                     <div class="image-wrapper">
                         <img src="${product.thumbnail_url}" alt="${product.name}">
                     </div>
                     <h3>${product.name}</h3>
-                    <p class="price">${price}</p>
+                    <p>${variantCountText}</p>
                 `;
                 productGrid.appendChild(cardLink);
             });
