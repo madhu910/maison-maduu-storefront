@@ -29,7 +29,7 @@
         .carousel-slide { min-width: 100%; aspect-ratio: 1/1; }
         .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
         .carousel-dots { display: flex; justify-content: center; gap: 0.75rem; margin-top: 1.5rem; }
-        .dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--border-color); cursor: pointer; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--border-color); cursor: pointer; transition: background-color 0.2s ease; }
         .dot.active { background-color: var(--accent-color); }
         .product-info h1 { font-size: 2.5rem; font-weight: 700; margin: 0 0 1rem 0; }
         .product-info .price { font-size: 1.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 2rem; }
@@ -39,13 +39,14 @@
         .pill-container { display: flex; flex-wrap: wrap; gap: 0.75rem; }
         .pill { padding: 0.75rem 1.5rem; border: 1px solid var(--border-color); border-radius: 50px; cursor: pointer; }
         .pill.active { border-color: var(--accent-color); color: var(--accent-color); box-shadow: 0 0 0 1px var(--accent-color); }
-        .pill.disabled { opacity: 0.4; cursor: not-allowed; }
         .buy-now { width: 100%; background-color: var(--accent-color); color: var(--bg-color); font-size: 1.2rem; font-weight: 600; padding: 1.2rem; border-radius: 12px; border: none; cursor: pointer; }
         [v-cloak] { display: none; }
     </style>
 </head>
 <body>
-    <header class="main-header"> <a href="index.html" class="nav-brand">Maison Maduu & Co.</a> </header>
+    <header class="main-header">
+        <a href="index.html" class="nav-brand">Maison Maduu & Co.</a>
+    </header>
     <div id="app" class="container" v-cloak>
         <main v-if="product" class="product-page">
             <div class="product-gallery">
@@ -58,7 +59,11 @@
                         </div>
                     </div>
                     <div class="carousel-dots">
-                        <div v-for="(image, index) in uniqueMockups" :key="index" class="dot" :class="{ active: index === currentSlideIndex }" @click="currentSlideIndex = index"></div>
+                        <div v-for="(image, index) in uniqueMockups" :key="index"
+                             class="dot"
+                             :class="{ active: index === currentSlideIndex }"
+                             @click="currentSlideIndex = index">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -75,13 +80,43 @@
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
         new Vue({
             el: '#app',
-            data: { product: null, currentSlideIndex: 0 /* other data properties */ },
-            computed: {
-                uniqueMockups() { /* ... */ },
-                formattedPrice() { /* ... */ },
-                formattedDescription() { /* ... */ }
+            data: { 
+                product: null,
+                currentSlideIndex: 0
             },
-            methods: { /* ... */ },
+            computed: {
+                uniqueMockups() {
+                    if (!this.product?.sync_variants) return [];
+                    // This logic correctly extracts all unique preview images from enabled variants
+                    const allImageUrls = this.product.sync_variants.flatMap(v =>
+                        v.is_enabled
+                          ? (v.files || [])
+                              .filter(f => f.type === 'preview')
+                              .map(f => f.preview_url || f.url)
+                          : []
+                    );
+                    return [...new Set(allImageUrls)].map(url => ({ url }));
+                },
+                formattedPrice() {
+                    const enabledVariants = this.product?.sync_variants?.filter(v => v.is_enabled);
+                    if (!enabledVariants || enabledVariants.length === 0) return 'Not available';
+                    // Finds the lowest price among enabled variants to show "From..."
+                    const lowestPrice = Math.min(...enabledVariants.map(v => v.price));
+                    return `From $${(lowestPrice / 100).toFixed(2)}`;
+                },
+                formattedDescription() {
+                    return this.product?.sync_product?.description?.replace(/\n/g, '<br>') || '';
+                }
+            },
+            methods: {
+                async fetchProduct(productId) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
+                        if (!response.ok) throw new Error('Failed to fetch product data');
+                        this.product = await response.json();
+                    } catch (e) { console.error("Failed to load product", e); }
+                }
+            },
             created() {
                 const gender = localStorage.getItem('shopSelection') || 'men';
                 document.body.className = `theme-${gender}`;
