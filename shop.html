@@ -66,7 +66,9 @@
 
         function normalizeString(str) {
             const lower = str.toLowerCase();
-            return lower.endsWith('s') ? lower.slice(0, -1) : lower;
+            if (lower.endsWith('es')) { return lower.slice(0, -2); }
+            if (lower.endsWith('s')) { return lower.slice(0, -1); }
+            return lower;
         }
 
         function populateSidebar() {
@@ -102,9 +104,8 @@
             const genderFiltered = allProducts.filter(p => {
                 const title = p.name.toLowerCase();
                 if (gender === 'men') {
-                    // This regex ensures it matches "men" or "unisex" as whole words and NOT "women"
                     return /\bmen|\bunisex\b/i.test(title) && !/\bwomen\b/i.test(title);
-                } else { // women
+                } else {
                     return /\bwomen|\bunisex\b/i.test(title);
                 }
             });
@@ -113,10 +114,12 @@
             if (activeCategory === 'all') {
                 categoryFiltered = genderFiltered;
             } else {
-                const normalizedCategory = normalizeString(activeCategory);
-                categoryFiltered = genderFiltered.filter(p => 
-                    (p.tags || []).some(tag => normalizeString(tag) === normalizedCategory)
-                );
+                categoryFiltered = genderFiltered.filter(p => {
+                    const normalizedCategory = normalizeString(activeCategory);
+                    const inTags = (p.tags || []).some(tag => normalizeString(tag) === normalizedCategory);
+                    const inName = p.name.toLowerCase().includes(normalizedCategory);
+                    return inTags || inName;
+                });
             }
             renderGrid(categoryFiltered);
         }
@@ -132,10 +135,10 @@
                 const cardLink = document.createElement("a");
                 cardLink.className = "card";
                 cardLink.href = `product.html?id=${product.id}`;
-                
-                // --- THIS IS THE CORRECTED LOGIC ---
-                // The list endpoint provides 'variants' as a number (count)
-                const variantCountText = product.variants > 1 ? `${product.variants} Variants` : `${product.variants} Variant`;
+
+                // CORRECTED: The API provides 'variants' as a number count on this endpoint.
+                const variantCount = product.variants || 0;
+                const variantCountText = variantCount > 1 ? `${variantCount} Variants` : `${variantCount} Variant`;
 
                 cardLink.innerHTML = `
                     <div class="image-wrapper">
