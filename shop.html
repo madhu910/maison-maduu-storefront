@@ -64,9 +64,16 @@
             women: { "All Women's Clothing": [], "Tops": ["T-shirts", "Polo shirts", "All-over shirts", "Tank tops", "Crop tops", "Embroidered shirts", "3/4 sleeve shirts", "Long sleeve shirts"], "Outerwear": ["Jackets & vests", "All hoodies & sweatshirts"], "Dresses & Skirts": ["Dresses", "Skirts"], "Bottoms": ["Custom women's sweatpants & joggers", "Leggings", "Shorts", "Pants"], "Activewear": ["Sports bras", "Swimwear", "Sleepwear"] }
         };
 
+        // --- CORRECTED HELPER FUNCTION ---
         function normalizeString(str) {
             const lower = str.toLowerCase();
-            return lower.endsWith('s') ? lower.slice(0, -1) : lower;
+            if (lower.endsWith('es')) {
+                return lower.slice(0, -2);
+            }
+            if (lower.endsWith('s')) {
+                return lower.slice(0, -1);
+            }
+            return lower;
         }
 
         function populateSidebar() {
@@ -102,9 +109,8 @@
             const genderFiltered = allProducts.filter(p => {
                 const title = p.name.toLowerCase();
                 if (gender === 'men') {
-                    // This regex ensures it matches "men" or "unisex" as whole words and NOT "women"
                     return /\bmen|\bunisex\b/i.test(title) && !/\bwomen\b/i.test(title);
-                } else { // women
+                } else {
                     return /\bwomen|\bunisex\b/i.test(title);
                 }
             });
@@ -132,17 +138,15 @@
                 const cardLink = document.createElement("a");
                 cardLink.className = "card";
                 cardLink.href = `product.html?id=${product.id}`;
-                
-                // --- THIS IS THE CORRECTED LOGIC ---
-                // The list endpoint provides 'variants' as a number (count)
-                const variantCountText = product.variants > 1 ? `${product.variants} Variants` : `${product.variants} Variant`;
+                const enabledVariants = (product.variants || []).filter(v => v.is_enabled);
+                const price = enabledVariants.length > 0 ? `$${(enabledVariants[0].price / 100).toFixed(2)}` : 'N/A';
 
                 cardLink.innerHTML = `
                     <div class="image-wrapper">
                         <img src="${product.thumbnail_url}" alt="${product.name}">
                     </div>
                     <h3>${product.name}</h3>
-                    <p>${variantCountText}</p>
+                    <p class="price">${price}</p>
                 `;
                 productGrid.appendChild(cardLink);
             });
