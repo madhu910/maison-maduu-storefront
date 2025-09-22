@@ -1,213 +1,292 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Product // Maison Maduu & Co.</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+
   <style>
-    :root {
-      --bg-color: #ffffff; --text-primary: #1d1d1f; --text-secondary: #6e6e73;
-      --accent-color: #0071e3; --border-color: #d2d2d7; --pill-bg: #f5f5f7;
-      --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    :root{
+      --bg:#ffffff; --text:#111; --muted:#6e6e73; --accent:#0071e3; --border:#e6e6ea; --pill:#f5f5f7;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    body.theme-men {
-      --bg-color: #000000; --text-primary: #FFFFFF; --text-secondary: #a1a1a6;
-      --card-bg: #1c1c1e; --border-color: #3a3a3c; --accent-color: #FFFFFF; --pill-bg: #1c1c1e;
+    body { font-family:var(--font); margin:0; color:var(--text); background-color:var(--bg); }
+    .container { max-width:1200px; margin:0 auto; padding:0 2rem; }
+    .main-header { padding:1.5rem 0; border-bottom:1px solid var(--border); text-align:center; position:sticky; top:0; background:var(--bg); z-index:20; }
+    .nav-brand { font-weight:600; text-decoration:none; color:var(--text); font-size:1.25rem; }
+
+    /* layout: left fixed gallery + right info column */
+    .product-page { display:grid; grid-template-columns: 640px 1fr; gap:48px; padding:4.5rem 0; align-items:start; }
+
+    /* gallery column */
+    .product-gallery { display:flex; gap:20px; align-items:flex-start; }
+    .thumbnail-strip { display:flex; flex-direction:column; gap:12px; align-items:flex-start; }
+    .thumbnail {
+      width:64px; height:64px; border-radius:10px; overflow:hidden; cursor:pointer;
+      background:var(--pill); border:1px solid transparent; display:flex; align-items:center; justify-content:center;
+      transition: box-shadow .15s ease, transform .12s ease, border-color .12s ease;
     }
-    *, *::before, *::after { box-sizing: border-box; }
-    body { font-family: var(--font-main); background-color: var(--bg-color); color: var(--text-primary); margin: 0; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
-    .main-header { padding: 1.5rem 0; border-bottom: 1px solid var(--border-color); text-align: center; background-color: var(--bg-color); position: sticky; top: 0; z-index: 100; }
-    .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
+    .thumbnail img { width:100%; height:100%; object-fit:cover; display:block; }
+    .thumbnail:hover { transform:translateY(-2px); }
+    .thumbnail.active {
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08), 0 0 0 4px rgba(0,113,227,0.10);
+      border-color: rgba(0,113,227,0.12);
+    }
 
-    /* --- PRODUCT LAYOUT --- */
-    .product-page { display: grid; grid-template-columns: 1.5fr 1fr; gap: 4rem; padding: 6rem 0; align-items: start; }
-    .product-gallery { display: flex; gap: 1.5rem; align-items: flex-start; position: sticky; top: 120px; }
-    .thumbnail-strip { display: flex; flex-direction: column; gap: 1rem; }
-    .thumbnail { width: 64px; height: 64px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: border-color 0.2s ease; }
-    .thumbnail img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .thumbnail.active { border-color: var(--accent-color); }
-    .main-image img { width: 100%; border-radius: 18px; background-color: var(--pill-bg); border: 1px solid var(--border-color); }
+    /* main image card */
+    .main-image {
+      width:100%;
+      background: #ffffff;
+      border-radius:18px;
+      border:1px solid var(--border);
+      padding:36px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:640px;   /* square-ish card like Printful */
+      box-shadow: 0 4px 12px rgba(16,24,40,0.04);
+    }
+    .main-image img {
+      max-width:100%;
+      max-height:100%;
+      object-fit:contain;
+      display:block;
+      border-radius:8px;
+    }
 
-    .product-info h1 { font-size: 2rem; font-weight: 700; margin: 0 0 1rem 0; }
-    .product-info .price { font-size: 1.75rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1.5rem; }
-    .product-info .description { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); line-height: 1.6; color: var(--text-secondary); }
+    /* product info column */
+    .product-info { max-width:420px; }
+    .rating { display:flex; align-items:center; gap:8px; color:var(--muted); margin-bottom:10px; }
+    .stars { color:#f59e0b; font-weight:700; letter-spacing:1px; }
+    .product-info h1 { font-size:2rem; margin:0 0 0.75rem; line-height:1.05; }
+    .price { font-size:1.6rem; margin:0 0 20px; font-weight:600; }
 
-    .rating { display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); margin-bottom: 1.5rem; }
-    .stars { color: #f59e0b; }
+    .option-group { margin-bottom:20px; }
+    .option-group label { display:block; font-weight:600; margin-bottom:12px; color:var(--text); }
 
-    .option-group { margin-bottom: 2rem; }
-    .option-group label { font-weight: 600; display: block; margin-bottom: 1rem; }
-    .pill-container { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-    .pill { padding: 0.75rem 1.5rem; border: 1px solid var(--border-color); border-radius: 50px; cursor: pointer; transition: all 0.2s ease; }
-    .pill.active { border-color: var(--accent-color); color: var(--accent-color); box-shadow: 0 0 0 1px var(--accent-color); }
-    .pill.disabled { opacity: 0.4; cursor: not-allowed; background-color: var(--border-color); }
-    .color-pill { width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; }
-    .color-dot { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-color); }
+    .pill-container { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .pill {
+      background:var(--pill); padding:10px 18px; border-radius:999px; border:1px solid var(--border);
+      cursor:pointer; font-weight:600; color:var(--text); transition: all .12s ease;
+    }
+    .pill:hover { transform:translateY(-2px); }
+    .pill.active { background: #ffffff; border-color: rgba(0,113,227,0.16); box-shadow:0 8px 20px rgba(0,113,227,0.06); color:var(--text); }
+    .pill.disabled { opacity:.45; cursor:not-allowed; transform:none; }
 
-    .buy-now { width: 100%; background-color: var(--accent-color); color: var(--bg-color); font-size: 1.2rem; font-weight: 600; padding: 1.2rem; border-radius: 12px; border: none; cursor: pointer; transition: opacity 0.2s ease; }
-    .buy-now:hover { opacity: 0.8; }
-    [v-cloak] { display: none; }
+    /* color swatches */
+    .color-pill { width:44px; height:44px; padding:0; border-radius:9px; display:flex; align-items:center; justify-content:center; }
+    .color-dot { width:28px; height:28px; border-radius:6px; border:1px solid var(--border); }
 
-    @media (max-width: 768px) {
-      .product-page { grid-template-columns: 1fr; }
-      .product-gallery { position: static; flex-direction: column-reverse; }
-      .thumbnail-strip { flex-direction: row; }
-      .thumbnail { width: auto; height: 64px; }
+    .buy-now {
+      width:100%; background:var(--accent); color:#fff; padding:14px 18px; border-radius:12px; border:none;
+      font-weight:700; font-size:1.05rem; cursor:pointer; margin-top:6px;
+    }
+    .buy-now:hover { opacity:.92; }
+
+    .description { margin-top:28px; color:var(--muted); line-height:1.6; border-top:1px solid var(--border); padding-top:18px; }
+
+    /* responsive */
+    @media (max-width:1000px){
+      .product-page { grid-template-columns: 1fr; gap:20px; padding:3rem 0; }
+      .product-gallery { width:100%; flex-direction:column-reverse; align-items:center; }
+      .thumbnail-strip { flex-direction:row; gap:10px; }
+      .main-image { min-height:420px; padding:20px; border-radius:12px; }
+      .product-info { max-width:none; width:100%; }
     }
   </style>
 </head>
 <body>
   <header class="main-header">
-    <a href="index.html" class="nav-brand">Maison Maduu & Co.</a>
+    <a class="nav-brand" href="#">Maison Maduu & Co.</a>
   </header>
 
   <div id="app" class="container" v-cloak>
     <main v-if="product" class="product-page">
-      <!-- PRODUCT GALLERY -->
+      <!-- gallery -->
       <div class="product-gallery">
         <div class="thumbnail-strip">
           <div class="thumbnail"
                v-for="image in uniqueMockups"
                :key="image.url"
-               @click="mainImage = image.url"
+               @click="setMainImage(image.url)"
                :class="{ active: mainImage === image.url }">
-            <img :src="image.url" alt="Thumbnail">
+            <img :src="image.url" :alt="product.sync_product?.name || 'thumb'">
           </div>
         </div>
+
         <div class="main-image">
-          <img :src="mainImage" :alt="product.sync_product.name">
+          <img :src="mainImage" :alt="product.sync_product?.name || 'product image'">
         </div>
       </div>
 
-      <!-- PRODUCT INFO -->
+      <!-- info -->
       <div class="product-info">
         <div class="rating">
           <span class="stars">★★★★☆</span>
           <span>4.8 (408 Reviews)</span>
         </div>
-        <h1>{{ product.sync_product.name }}</h1>
+
+        <h1>{{ product.sync_product?.name }}</h1>
         <p class="price">{{ formattedPrice }}</p>
 
-        <!-- COLOR OPTIONS -->
-        <div v-if="colors.length > 0" class="option-group">
+        <div v-if="colors.length" class="option-group">
           <label>Color</label>
           <div class="pill-container">
             <div v-for="color in colors" :key="color.key"
                  class="pill color-pill"
                  :class="{ active: color.key === selectedColor }"
-                 @click="selectedColor = color.key">
-              <div class="color-dot" :style="{ backgroundColor: color.hex }"></div>
+                 @click="selectColor(color.key)">
+              <div class="color-dot" :style="{ backgroundColor: color.hex }" :title="color.key"></div>
             </div>
           </div>
         </div>
 
-        <!-- SIZE OPTIONS -->
-        <div v-if="sizes.length > 0" class="option-group">
+        <div v-if="sizes.length" class="option-group">
           <label>Size</label>
           <div class="pill-container">
             <div v-for="size in sizes" :key="size.value"
                  class="pill"
                  :class="{ active: size.value === selectedSize, disabled: !size.available }"
-                 @click="size.available ? selectedSize = size.value : null">
+                 @click="size.available ? selectSize(size.value) : null">
               {{ size.value }}
             </div>
           </div>
         </div>
 
         <button class="buy-now">Acquire</button>
+
         <div class="description" v-html="formattedDescription"></div>
       </div>
     </main>
+
+    <div v-else style="padding:4rem 0; text-align:center; color:var(--muted)">Loading product…</div>
   </div>
 
   <script>
     const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
+
     new Vue({
       el: '#app',
-      data: { product: null, selectedColor: null, selectedSize: null, mainImage: '' },
+      data: () => ({
+        product: null,
+        selectedColor: null,
+        selectedSize: null,
+        mainImage: ''
+      }),
       computed: {
         uniqueMockups() {
           if (!this.product) return [];
-          const mockups = (this.product.sync_variants || [])
-            .flatMap(variant => (variant.files || []).filter(file => file.type === 'preview'))
-            .map(file => ({ url: file.preview_url }));
-          return [...new Map(mockups.map(item => [item.url, item])).values()];
+          const files = (this.product.sync_variants || [])
+            .flatMap(v => (v.files || []).filter(f => f.type === 'preview' || f.type === 'mockup' || f.preview_url))
+            .map(f => ({ url: f.preview_url || f.url || f.thumbnail || '' }))
+            .filter(i => i.url);
+          // dedupe by url while preserving order
+          const map = new Map();
+          files.forEach(it => { if (!map.has(it.url)) map.set(it.url, it); });
+          return Array.from(map.values());
         },
         colors() {
           if (!this.product) return [];
-          const colorMap = new Map();
+          const map = new Map();
           (this.product.sync_variants || []).forEach(v => {
-            if (v.color_code && v.color) {
-              colorMap.set(v.color, { key: v.color, hex: v.color_code });
-            }
+            // use explicit color_code if available, otherwise fallback to a neutral gray
+            const key = v.color || (v.name && v.name.split(' - ')[1]) || 'Default';
+            const hex = v.color_code || '#e6e6ea';
+            if (!map.has(key)) map.set(key, { key, hex });
           });
-          return Array.from(colorMap.values());
+          return Array.from(map.values());
         },
         sizes() {
           if (!this.product) return [];
-          const allSizes = [...new Set(this.product.sync_variants.map(v => v.size))];
-          const availableSizes = new Set((this.product.sync_variants || [])
-            .filter(v => v.color === this.selectedColor)
-            .map(v => v.size)
-          );
-          return allSizes.map(size => ({
-            value: size,
-            available: availableSizes.has(size)
-          }));
+          const allSizes = Array.from(new Set((this.product.sync_variants || []).map(v => v.size || 'One')));
+          const availableForColor = new Set((this.product.sync_variants || [])
+            .filter(v => v.color === this.selectedColor || (!this.selectedColor && true))
+            .map(v => v.size));
+          return allSizes.map(s => ({ value: s, available: availableForColor.has(s) }));
         },
         selectedVariant() {
           if (!this.product || !this.selectedColor || !this.selectedSize) return null;
-          return this.product.sync_variants.find(v => v.color === this.selectedColor && v.size === this.selectedSize);
+          return this.product.sync_variants.find(v => (v.color === this.selectedColor || (v.color || 'Default') === this.selectedColor) && (v.size === this.selectedSize));
         },
         formattedPrice() {
           if (this.selectedVariant) return `$${this.selectedVariant.retail_price}`;
-          if(this.product) return `From $${this.product.sync_variants[0].retail_price}`;
-          return 'Select Options';
+          if (this.product && this.product.sync_variants && this.product.sync_variants.length) return `From $${this.product.sync_variants[0].retail_price}`;
+          return 'Select options';
         },
         formattedDescription() {
           return this.product?.sync_product?.description?.replace(/\n/g, '<br>') || '';
         }
       },
       methods: {
+        setMainImage(url) { if (url) this.mainImage = url; },
+        selectColor(key) {
+          this.selectedColor = key;
+          // when color changed, the size watcher logic will select default size
+          const firstAvailable = this.sizes.find(s => s.available);
+          this.selectedSize = firstAvailable ? firstAvailable.value : this.sizes[0]?.value || null;
+        },
+        selectSize(size) {
+          this.selectedSize = size;
+        },
         async fetchProduct(productId) {
           try {
-            const response = await fetch(`${API_BASE_URL}/api/products/${productId}`);
-            const data = await response.json();
+            if (!productId) {
+              console.warn('No product id passed in query string (id=...). Use ?id=<productId>');
+              // still attempt to fetch a default/demo id if you want, otherwise stop
+            }
+            const res = await fetch(`${API_BASE_URL}/api/products/${productId}`);
+            const data = await res.json();
 
-            data.sync_variants = data.sync_variants.map(variant => ({
-              ...variant,
-              color: variant.name.split(' - ')[1]?.split(' / ')[0] || 'Default',
-              size: variant.size
+            // normalize variants so they always have files array
+            data.sync_variants = (data.sync_variants || []).map(v => ({
+              ...v,
+              files: v.files || [],
+              color: v.color || (v.name && v.name.split(' - ')[1]?.split(' / ')[0]) || 'Default',
+              size: v.size || 'One'
             }));
 
             this.product = data;
-            this.mainImage = this.uniqueMockups[0]?.url;
-            this.selectedColor = this.colors[0]?.key;
-          } catch (e) { console.error("Failed to load product", e); }
+
+            // ensure computed properties update first, then pick defaults
+            this.$nextTick(() => {
+              this.selectedColor = this.colors[0]?.key || null;
+              const firstAvailableSize = this.sizes.find(s => s.available);
+              this.selectedSize = firstAvailableSize ? firstAvailableSize.value : (this.sizes[0]?.value || null);
+
+              // choose variant image if available, otherwise first unique mockup
+              const variantImage = this.selectedVariant?.files?.find(f => f.type === 'preview')?.preview_url;
+              this.mainImage = variantImage || this.uniqueMockups[0]?.url || (this.product.sync_product?.thumbnail || '');
+            });
+          } catch (err) {
+            console.error('Failed to fetch product', err);
+          }
         }
       },
       watch: {
-        selectedColor(newColor) {
-          const firstAvailableSize = this.sizes.find(s => s.available);
-          this.selectedSize = firstAvailableSize ? firstAvailableSize.value : null;
-        },
-        selectedVariant(newVariant) {
-          if (newVariant) {
-            const imageForVariant = (newVariant.files || []).find(f => f.type === 'preview');
-            if(imageForVariant) this.mainImage = imageForVariant.preview_url;
+        // when selectedVariant finalizes, update main image (most targeted)
+        selectedVariant(newV) {
+          if (newV) {
+            const img = (newV.files || []).find(f => f.type === 'preview' || f.preview_url);
+            if (img) this.mainImage = img.preview_url || img.url || img;
           }
         }
       },
       created() {
+        // theme selection from localStorage (keeps your original behavior)
         const gender = localStorage.getItem('shopSelection') || 'men';
         document.body.className = `theme-${gender}`;
+
+        // grab product id from querystring: ?id=xxxxx
         const params = new URLSearchParams(window.location.search);
-        this.fetchProduct(params.get('id'));
+        const id = params.get('id') || params.get('productId') || null;
+
+        this.fetchProduct(id);
       }
     });
   </script>
