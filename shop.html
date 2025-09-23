@@ -3,156 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Collection // Maison Maduu & Co.</title>
+    <title>Collection // Maison Maduu & Co.</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700&family=Inter:wght@400&display=swap" rel="stylesheet">
     <style>
-        :root {
-            /* Default Theme (Men's) */
-            --bg-color: #000000; --text-primary: #FFFFFF; --text-secondary: #a1a1a6;
-            --card-bg: #1c1c1e; --border-color: #3a3a3c; --accent-color: #FFFFFF;
-        }
-        body.theme-women {
-            /* Women's Theme */
-            --bg-color: #F5F5F4; --text-primary: #1C1C1E; --text-secondary: #8A8A8E;
-            --card-bg: #FFFFFF; --border-color: #EAEAEA; --accent-color: #B2844E;
-        }
-        *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); margin: 0; transition: all 0.5s ease; }
-        .container { max-width: 1440px; margin: 0 auto; padding: 0 2rem; }
-        .main-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); text-align: center; background: var(--bg-color); position: sticky; top: 0; z-index: 50; }
-        .nav-brand { font-size: 1.5rem; font-weight: 600; text-decoration: none; color: var(--text-primary); }
-        .shop-layout { display: grid; grid-template-columns: 240px 1fr; gap: 3rem; align-items: flex-start; padding: 4rem 0; }
-        .sidebar { position: sticky; top: 100px; }
-        .sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
-        .sidebar-nav .group-title { font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-top: 2rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
-        .sidebar-nav .group-title:first-child { margin-top: 0; }
-        .sidebar-nav a { display: block; text-decoration: none; color: var(--text-primary); padding: 0.6rem 0; font-size: 1.1rem; transition: color 0.2s ease; }
-        .sidebar-nav a:hover { color: var(--accent-color); }
-        .sidebar-nav a.active { color: var(--accent-color); font-weight: 700; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
-        .card { text-decoration: none; color: var(--text-primary); text-align: center; }
-        .card .image-wrapper { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; overflow: hidden; margin-bottom: 1.5rem; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-        .card:hover .image-wrapper { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
-        .card h3 { font-size: 1.1rem; font-weight: 600; margin: 0.5rem 0; }
-        .card p { font-size: 1rem; color: var(--text-secondary); margin: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9f9; color: #111; margin: 0; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+        .header { text-align: center; padding: 2rem 0; }
+        .header h1 { font-family: 'Sora', sans-serif; font-size: 3rem; margin: 0; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .card { text-decoration: none; color: #111; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s, box-shadow 0.3s; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .card img { width: 100%; height: 220px; object-fit: cover; }
+        .card-content { padding: 1.5rem; }
+        .card h3 { font-family: 'Sora', sans-serif; margin: 0 0 0.5rem 0; }
+        .card .author { color: #666; margin-bottom: 1rem; }
+        .card .price { font-size: 1.5rem; font-weight: 700; color: #000; }
     </style>
 </head>
 <body>
-    <header class="main-header">
-        <a href="index.html" class="nav-brand">Maison Maduu & Co.</a>
-    </header>
     <div class="container">
-        <div class="shop-layout">
-            <aside class="sidebar">
-                <nav class="sidebar-nav" id="sidebar-nav"></nav>
-            </aside>
-            <main id="shop-main">
-                <div class="product-grid" id="product-grid"><p>Loading Collection...</p></div>
-            </main>
-        </div>
+        <header class="header">
+            <h1>The Collection</h1>
+        </header>
+        <main class="product-grid" id="product-grid">
+            <p>Loading products...</p>
+        </main>
     </div>
     <script>
         const API_BASE_URL = 'https://maison-maduu-backend.onrender.com';
-        let allProducts = [];
-        let gender = 'men';
-
-        const CATEGORIES = {
-            men: { "All Men's Clothing": [], "Shirts": ["T-shirt", "All-over shirt", "Polo shirt", "Tank top", "3/4 sleeve shirt", "Long sleeve shirt", "Embroidered shirt"], "Outerwear": ["Jacket", "Vest", "Hoodie", "Sweatshirt", "Knitwear"], "Bottoms": ["Sweatpant", "Jogger", "Underwear", "Legging", "Short", "Pant"] },
-            women: { "All Women's Clothing": [], "Tops": ["T-shirt", "Polo shirt", "All-over shirt", "Tank top", "Crop top", "Embroidered shirt", "3/4 sleeve shirt", "Long sleeve shirt"], "Outerwear": ["Jacket", "Vest", "Hoodie", "Sweatshirt"], "Dresses & Skirts": ["Dress", "Skirt"], "Bottoms": ["Sweatpant", "Jogger", "Legging", "Short", "Pant"], "Activewear": ["Sports bra", "Swimwear", "Sleepwear"] }
-        };
-
-        function populateSidebar() {
-            const nav = document.getElementById('sidebar-nav');
-            const genderCategories = CATEGORIES[gender];
-            let navHTML = '<ul>';
-            for (const group in genderCategories) {
-                if (group.startsWith("All")) {
-                     navHTML += `<li><a href="#" class="category-link active" data-category="all">${group}</a></li>`;
-                } else {
-                    navHTML += `<li class="group-title">${group}</li>`;
-                    genderCategories[group].forEach(keyword => {
-                        const plural = keyword.endsWith('s') ? keyword : `${keyword}s`;
-                        navHTML += `<li><a href="#" class="category-link" data-category="${keyword}">${plural.charAt(0).toUpperCase() + plural.slice(1)}</a></li>`;
-                    });
-                }
-            }
-            navHTML += '</ul>';
-            nav.innerHTML = navHTML;
-
-            nav.addEventListener('click', e => {
-                e.preventDefault();
-                if (e.target.classList.contains('category-link')) {
-                    document.querySelectorAll('.category-link').forEach(link => link.classList.remove('active'));
-                    e.target.classList.add('active');
-                    filterAndRenderProducts();
-                }
-            });
-        }
-
-        function filterAndRenderProducts() {
-            const activeCategory = document.querySelector('.category-link.active').dataset.category;
-            
-            const genderFiltered = allProducts.filter(p => {
-                const title = p.name.toLowerCase();
-                if (gender === 'men') {
-                    return /\bmen|\bunisex\b/i.test(title) && !/\bwomen\b/i.test(title);
-                } else {
-                    return /\bwomen|\bunisex\b/i.test(title);
-                }
-            });
-
-            let categoryFiltered = [];
-            if (activeCategory === 'all') {
-                categoryFiltered = genderFiltered;
-            } else {
-                categoryFiltered = genderFiltered.filter(p => p.name.toLowerCase().includes(activeCategory.toLowerCase()));
-            }
-            renderGrid(categoryFiltered);
-        }
-
-        function renderGrid(products) {
+        async function fetchAndRenderProducts() {
             const productGrid = document.getElementById("product-grid");
-            productGrid.innerHTML = "";
-            if (products.length === 0) {
-                productGrid.innerHTML = `<p>No products found in this category.</p>`;
-                return;
-            }
-            products.forEach(product => {
-                const cardLink = document.createElement("a");
-                cardLink.className = "card";
-                cardLink.href = `product.html?id=${product.id}`;
-                
-                const variantCountText = product.variants > 1 ? `${product.variants} Variants` : `${product.variants} Variant`;
-
-                cardLink.innerHTML = `
-                    <div class="image-wrapper">
-                        <img src="${product.thumbnail_url}" alt="${product.name}">
-                    </div>
-                    <h3>${product.name}</h3>
-                    <p>${variantCountText}</p>
-                `;
-                productGrid.appendChild(cardLink);
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            gender = localStorage.getItem('shopSelection') || 'men';
-            document.body.className = `theme-${gender}`;
-            
-            populateSidebar();
-
             try {
-                const response = await fetch(`${API_BASE_URL}/api/products`);
-                allProducts = await response.json();
-                filterAndRenderProducts();
+                const response = await fetch(`${API_BASE_URL}/products`);
+                const products = await response.json();
+                productGrid.innerHTML = "";
+                products.forEach(product => {
+                    const card = document.createElement('a');
+                    card.className = 'card';
+                    card.href = `product.html?id=${product.id}`;
+                    card.innerHTML = `
+                        <img src="${product.coverImage}" alt="${product.title}">
+                        <div class="card-content">
+                            <h3>${product.title}</h3>
+                            <p class="author">by ${product.author}</p>
+                            <p class="price">$${product.price.toFixed(2)}</p>
+                        </div>
+                    `;
+                    productGrid.appendChild(card);
+                });
             } catch (e) {
-                console.error("Failed to load products:", e);
-                document.getElementById("product-grid").innerHTML = `<p>Failed to load products. Check console for details.</p>`;
+                productGrid.innerHTML = `<p>Failed to load products.</p>`;
             }
-        });
+        }
+        document.addEventListener('DOMContentLoaded', fetchAndRenderProducts);
     </script>
 </body>
 </html>
