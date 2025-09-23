@@ -54,15 +54,40 @@
             color: var(--text-secondary);
             font-weight: 500;
         }
-        .shop-header {
+        
+        /* --- NEW: COLLECTION BANNER STYLES --- */
+        .collection-hero {
+            position: relative;
+            padding: 6rem 2rem;
+            margin: 3rem 0;
+            border-radius: 12px;
+            overflow: hidden;
             text-align: center;
-            padding: 4rem 0;
+            color: #fff;
         }
-        .shop-header h1 {
+        .collection-hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url(https://images.pexels.com/photos/1616403/pexels-photo-1616403.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2) no-repeat center center/cover;
+            z-index: 1;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+        .hero-content h1 {
             font-family: var(--font-heading);
             font-size: clamp(2.5rem, 6vw, 4rem);
-            margin: 0;
+            margin: 0 0 1rem 0;
         }
+        .hero-content p {
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto;
+            color: rgba(255,255,255,0.9);
+        }
+
         .product-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -127,9 +152,14 @@
                 </div>
             </nav>
         </header>
-        <div class="shop-header">
-            <h1>The Collection</h1>
-        </div>
+
+        <section class="collection-hero">
+            <div class="hero-content">
+                <h1>The Digital Collection</h1>
+                <p>Curated assets and knowledge to elevate your creative and professional life.</p>
+            </div>
+        </section>
+
         <main class="product-grid" id="product-grid">
             <p>Loading products...</p>
         </main>
